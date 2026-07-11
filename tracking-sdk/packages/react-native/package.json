@@ -1,0 +1,36 @@
+{
+  "name": "@stillkinetic/rn-sdk",
+  "version": "0.1.0",
+  "description": "Selectable-metric behavioral tracking with threshold-triggered Stripe billing, for React Native apps.",
+  "license": "MIT",
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --out-dir dist --clean --external react-native,react",
+    "dev": "tsup src/index.ts --format esm,cjs --dts --out-dir dist --watch --external react-native,react",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@stripe/stripe-react-native": "^0.37.0",
+    "react": ">=18.0.0",
+    "react-native": ">=0.72.0"
+  },
+  "devDependencies": {
+    "@stripe/stripe-react-native": "^0.37.3",
+    "@types/react": "^18.3.31",
+    "react": "^18.3.1",
+    "react-native": "^0.74.7",
+    "tsup": "^8.0.2",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

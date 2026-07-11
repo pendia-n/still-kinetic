@@ -1,0 +1,23 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "still-kinetic",
+  "compatibility_date": "2026-07-09",
+  "compatibility_flags": ["nodejs_als", "nodejs_compat"],
+  "main": ".svelte-kit/cloudflare/_worker.js",
+  "assets": {
+    "binding": "ASSETS",
+    "directory": ".svelte-kit/cloudflare"
+  },
+  "workers_dev": true,
+  "preview_urls": true,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "still-kinetic",
+      "database_id": "101f5f1f-971e-4e5c-af44-d9098c883b21"
+    }
+  ],
+  "vars": {
+    "APP_URL": "https://still-kinetic.pendia-community.workers.dev"
+  }
+}
