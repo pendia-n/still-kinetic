@@ -15,8 +15,8 @@
   onMount(async () => {
     try {
       const res = await fetch('/api/auth/me');
-      if (res.ok) {
-        const data = await res.json();
+      const data = await res.json();
+      if (data.authenticated) {
         window.location.href = data.role === 'manager' ? '/dashboard' : '/dashboard/admin';
       }
     } catch {}

@@ -7,8 +7,8 @@
   onMount(async () => {
     try {
       const res = await fetch('/api/auth/me');
-      if (res.ok) {
-        const data = await res.json();
+      const data = await res.json();
+      if (data.authenticated) {
         window.location.href = data.role === 'manager' ? '/dashboard' : '/dashboard/admin';
       }
     } catch {}
@@ -48,7 +48,7 @@
         <div class="card">
           <h3 class="lp-metric-h">Count</h3>
           <p class="lp-metric-p">button_clicks, page_views, api_calls, form_submits, file_uploads</p>
-          <span class="lp-unit">unit: 次</span>
+          <span class="lp-unit">unit: count</span>
         </div>
         <div class="card">
           <h3 class="lp-metric-h">Distance</h3>
@@ -77,9 +77,7 @@
           <h3>Basic</h3>
           <p class="lp-price">$2<span>/week</span></p>
           <ul>
-            <li>Up to 2 metrics</li>
-            <li>Basic analytics</li>
-            <li>Stripe Connect</li>
+            <li>2 metrics</li>
           </ul>
           <a href="/register" class="btn-brand" style="display:block;text-align:center">Choose Basic</a>
         </div>
@@ -87,13 +85,20 @@
           <h3>Full</h3>
           <p class="lp-price">$10<span>/week</span></p>
           <ul>
-            <li>Up to 16 metrics</li>
-            <li>Full analytics</li>
-            <li>Stripe Connect auto-split</li>
-            <li>Priority support</li>
+            <li>16 metrics</li>
           </ul>
           <a href="/register" class="btn-brand" style="display:block;text-align:center">Choose Full</a>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-section lp-alt">
+    <div class="lp-container">
+      <p class="section-title">SDK Packages</p>
+      <div class="lp-links">
+        <a href="https://www.npmjs.com/package/@stillkinetic/web-sdk" class="btn-brand" target="_blank" rel="noopener">@stillkinetic/web-sdk →</a>
+        <a href="https://www.npmjs.com/package/@stillkinetic/rn-sdk" class="btn-ghost" target="_blank" rel="noopener">@stillkinetic/rn-sdk →</a>
       </div>
     </div>
   </section>
@@ -117,16 +122,6 @@
           <h3>Earn</h3>
           <p>SDK sends events, we handle billing</p>
         </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="lp-section lp-alt">
-    <div class="lp-container">
-      <p class="section-title">SDK Packages</p>
-      <div class="lp-links">
-        <a href="https://www.npmjs.com/package/@stillkinetic/web-sdk" class="btn-brand" target="_blank" rel="noopener">@stillkinetic/web-sdk →</a>
-        <a href="https://www.npmjs.com/package/@stillkinetic/rn-sdk" class="btn-ghost" target="_blank" rel="noopener">@stillkinetic/rn-sdk →</a>
       </div>
     </div>
   </section>

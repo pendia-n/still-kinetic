@@ -4,8 +4,8 @@ import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ request, platform }) => {
   const token = getAuthTokenFromRequest(request);
-  if (!token) return json({ error: 'unauthorized' }, { status: 401 });
+  if (!token) return json({ authenticated: false }, { status: 200 });
   const user = await verifyToken(token, platform);
-  if (!user) return json({ error: 'unauthorized' }, { status: 401 });
-  return json({ userId: user.userId, role: user.role });
+  if (!user) return json({ authenticated: false }, { status: 200 });
+  return json({ authenticated: true, userId: user.userId, role: user.role });
 };

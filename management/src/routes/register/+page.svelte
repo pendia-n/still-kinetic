@@ -22,10 +22,14 @@
     length: false, upper: false, lower: false, digit: false, special: false,
   });
 
-  onMount(() => {
-    if (localStorage.getItem('sk_token')) {
-      window.location.href = '/dashboard/admin';
-    }
+  onMount(async () => {
+    try {
+      const res = await fetch('/api/auth/me');
+      const data = await res.json();
+      if (data.authenticated) {
+        window.location.href = '/dashboard/admin';
+      }
+    } catch {}
   });
 
   function checkStrength(pw: string) {
@@ -104,8 +108,6 @@
       const data = await res.json();
       if (!res.ok) { error = data.error; return; }
       totpVerified = false;
-      localStorage.setItem('sk_logged_in', 'true');
-      localStorage.setItem('sk_role', data.role);
       window.location.href = '/dashboard/admin';
     } catch { error = 'Connection error'; }
     finally { loading = false; }
@@ -121,8 +123,7 @@
       <!-- Username -->
       <div class="form-group">
         <label>Username *</label>
-        <input type="text" bind:value={username} placeholder="dev_handle" maxlength={50} required
-          pattern={"[a-zA-Z0-9_-]{3,50}"} />
+        <input type="text" bind:value={username} placeholder="dev_handle" minlength={3} maxlength={50} required />
         <span class="field-hint">3-50 chars: letters, numbers, underscore, hyphen</span>
       </div>
 
