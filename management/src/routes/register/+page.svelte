@@ -122,7 +122,7 @@
       <div class="form-group">
         <label>Username *</label>
         <input type="text" bind:value={username} placeholder="dev_handle" maxlength={50} required
-          pattern="[a-zA-Z0-9_-]{3,50}" />
+          pattern={"[a-zA-Z0-9_-]{3,50}"} />
         <span class="field-hint">3-50 chars: letters, numbers, underscore, hyphen</span>
       </div>
 

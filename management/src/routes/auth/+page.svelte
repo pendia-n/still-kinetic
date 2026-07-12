@@ -12,10 +12,14 @@
   let loginToken = $state('');
   let totpCode = $state('');
 
-  onMount(() => {
-    if (localStorage.getItem('sk_token')) {
-      window.location.href = localStorage.getItem('sk_role') === 'manager' ? '/dashboard' : '/dashboard/admin';
-    }
+  onMount(async () => {
+    try {
+      const res = await fetch('/api/auth/me');
+      if (res.ok) {
+        const data = await res.json();
+        window.location.href = data.role === 'manager' ? '/dashboard' : '/dashboard/admin';
+      }
+    } catch {}
   });
 
   async function login() {
@@ -38,8 +42,6 @@
         return;
       }
 
-      localStorage.setItem('sk_token', data.token);
-      localStorage.setItem('sk_role', data.role);
       window.location.href = data.role === 'manager' ? '/dashboard' : '/dashboard/admin';
     } catch { error = 'Connection error'; }
     finally { loading = false; }
@@ -56,8 +58,6 @@
       });
       const data = await res.json();
       if (!res.ok) { error = data.error; return; }
-      localStorage.setItem('sk_token', data.token);
-      localStorage.setItem('sk_role', data.role);
       window.location.href = data.role === 'manager' ? '/dashboard' : '/dashboard/admin';
     } catch { error = 'Verification error'; }
     finally { loading = false; }

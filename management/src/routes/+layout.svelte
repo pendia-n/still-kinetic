@@ -6,16 +6,20 @@
   let role: string | null = null;
   let ready = $state(false);
 
-  onMount(() => {
-    role = localStorage.getItem('sk_role');
+  onMount(async () => {
+    try {
+      const res = await fetch('/api/auth/me');
+      if (res.ok) {
+        const data = await res.json();
+        role = data.role;
+      }
+    } catch {}
     ready = true;
   });
 
   function logout() {
     fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
-    localStorage.removeItem('sk_logged_in');
-    localStorage.removeItem('sk_role');
-    window.location.href = '/auth';
+    window.location.href = '/';
   }
 </script>
 
