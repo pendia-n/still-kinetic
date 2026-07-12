@@ -1,5 +1,5 @@
 <script lang="ts">
-  import '../app.css';
+  import '../../app.css';
   import { onMount } from 'svelte';
 
   let identifier = $state('');
@@ -13,7 +13,7 @@
   let totpCode = $state('');
 
   onMount(() => {
-    if (localStorage.getItem('sk_logged_in') === 'true') {
+    if (localStorage.getItem('sk_token')) {
       window.location.href = localStorage.getItem('sk_role') === 'manager' ? '/dashboard' : '/dashboard/admin';
     }
   });

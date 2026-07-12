@@ -40,10 +40,10 @@
   });
 
   function id() { return $page.url.pathname.split('/').pop(); }
-  function token() { return localStorage.getItem('sk_token'); }
+  function token() { return ''; }  // Cookie auth
 
   async function loadApp() {
-    const res = await fetch(`/api/apps/${id()}`, { headers: { 'Authorization': `Bearer ${token()}` } });
+    const res = await fetch(`/api/apps/${id()}`);
     appData = await res.json();
     try {
       const parsed = JSON.parse(appData.allowed_metrics || '[]');

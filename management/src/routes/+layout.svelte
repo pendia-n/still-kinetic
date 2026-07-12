@@ -3,32 +3,31 @@
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
 
-  let token: string | null = null;
   let role: string | null = null;
   let ready = $state(false);
 
   onMount(() => {
-    token = localStorage.getItem('sk_token');
     role = localStorage.getItem('sk_role');
     ready = true;
   });
 
   function logout() {
-    localStorage.removeItem('sk_token');
+    fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+    localStorage.removeItem('sk_logged_in');
     localStorage.removeItem('sk_role');
-    window.location.href = '/';
+    window.location.href = '/auth';
   }
 </script>
 
 {#if ready}
-  {#if $page.url.pathname === '/' || $page.url.pathname === '/register'}
+  {#if $page.url.pathname === '/' || $page.url.pathname === '/auth' || $page.url.pathname === '/register'}
     <slot />
-  {:else if !token}
+  {:else if !role}
     <div class="auth-page">
       <div class="auth-card">
         <h1>Not logged in</h1>
         <p>Please log in to access the dashboard.</p>
-        <a href="/" class="btn-gold" style="display:block;text-align:center;margin-top:1rem">Go to Login</a>
+        <a href="/auth" class="btn-brand" style="display:block;text-align:center;margin-top:1rem">Go to Login</a>
       </div>
     </div>
   {:else}

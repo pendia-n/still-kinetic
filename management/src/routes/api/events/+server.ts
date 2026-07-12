@@ -5,6 +5,7 @@ import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request, platform }) => {
   const d1 = platform!.env.DB;
+  const env = platform!.env;
   const body = await request.json();
 
   // Accept apiKey from body OR X-Api-Key header (web SDK uses header)
@@ -30,7 +31,11 @@ export const POST: RequestHandler = async ({ request, platform }) => {
     return json({ error: 'no allowed metrics configured for this app' }, { status: 403 });
   }
 
-  const events = Array.isArray(body) ? body : [body];
+  // Handle both SDK formats:
+  //   { appId, events: [...] }  ← SDK batchSender
+  //   [...] or { endUserId, ... } ← direct / single event
+  const rawEvents = body.events || (Array.isArray(body) ? body : [body]);
+  const events = Array.isArray(rawEvents) ? rawEvents : [rawEvents];
 
   // Filter out disallowed metrics silently (tracking must never throw)
   for (const ev of events) {
@@ -43,7 +48,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
       metric: ev.metric,
       value: ev.value,
       timestamp: ev.timestamp || Date.now(),
-    }, d1);
+    }, d1, env);
   }
 
   return json({ ok: true });

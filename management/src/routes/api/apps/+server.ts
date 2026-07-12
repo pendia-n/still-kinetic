@@ -1,16 +1,16 @@
 import { json } from '@sveltejs/kit';
-import { verifyToken } from '$lib/server/auth';
+import { verifyToken, getAuthTokenFromRequest } from '$lib/server/auth';
 import { ALL_METRICS, TIER_CONFIG, serializeAllowedMetrics, isValidMetric } from '$lib/server/metrics';
 import type { RequestHandler } from './$types';
 
-function auth(req: Request) {
-  const authHeader = req.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) return null;
-  return verifyToken(authHeader.slice(7));
+function auth(req: Request, platform?: any) {
+  const token = getAuthTokenFromRequest(req);
+  if (!token) return null;
+  return verifyToken(token, platform);
 }
 
 export const GET: RequestHandler = async ({ request, platform }) => {
-  const user = await auth(request);
+  const user = await auth(request, platform);
   if (!user) return json({ error: 'unauthorized' }, { status: 401 });
 
   const d1 = platform!.env.DB;
@@ -30,7 +30,7 @@ export const GET: RequestHandler = async ({ request, platform }) => {
 };
 
 export const POST: RequestHandler = async ({ request, platform }) => {
-  const user = await auth(request);
+  const user = await auth(request, platform);
   if (!user) return json({ error: 'unauthorized' }, { status: 401 });
   if (user.role !== 'admin') return json({ error: 'only admins can create apps' }, { status: 403 });
 

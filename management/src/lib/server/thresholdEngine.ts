@@ -1,4 +1,3 @@
-import Stripe from 'stripe';
 import { getStripe, platformFeeFraction, PLATFORM_METADATA } from './stripe';
 import {
   CUMULATIVE_METRICS, INSTANTANEOUS_METRICS,
@@ -13,13 +12,13 @@ interface IngestedEvent {
   timestamp: number;
 }
 
-export async function processEvent(appId: string, event: IngestedEvent, d1: D1Database): Promise<void> {
-  processEventAsync(appId, event, d1).catch((err) => {
+export async function processEvent(appId: string, event: IngestedEvent, d1: D1Database, env: any): Promise<void> {
+  processEventAsync(appId, event, d1, env).catch((err) => {
     console.error(`[thresholdEngine] Error for ${appId}/${event.metric}:`, err);
   });
 }
 
-async function processEventAsync(appId: string, event: IngestedEvent, d1: D1Database): Promise<void> {
+async function processEventAsync(appId: string, event: IngestedEvent, d1: D1Database, env: any): Promise<void> {
   if (!isValidMetric(event.metric)) return;
 
   const isC = (CUMULATIVE_METRICS as readonly string[]).includes(event.metric);
@@ -47,9 +46,9 @@ async function processEventAsync(appId: string, event: IngestedEvent, d1: D1Data
     lastTriggeredAt = null;
     aggId = crypto.randomUUID();
     await d1.prepare(
-      `INSERT INTO event_aggregates (id, app_id, end_user_external_id, page_id, metric, value, baseline_value, updated_at, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)`
-    ).bind(aggId, appId, event.endUserId, event.pageId, event.metric, value, new Date().toISOString(), new Date().toISOString()).run();
+`INSERT INTO event_aggregates (id, app_id, end_user_external_id, page_id, metric, value, baseline_value, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, 0, ?)`
+    ).bind(aggId, appId, event.endUserId, event.pageId, event.metric, value, new Date().toISOString()).run();
   }
 
   // Check threshold
@@ -63,17 +62,17 @@ async function processEventAsync(appId: string, event: IngestedEvent, d1: D1Data
 
   // Instantaneous cooldown
   if (isI && lastTriggeredAt) {
-    const elapsed = Date.now() - new Date(lastTriggeredAt + 'Z').getTime();
+    const elapsed = Date.now() - new Date(lastTriggeredAt).getTime();
     if (elapsed < INSTANTANEOUS_TRIGGER_COOLDOWN_MS) return;
   }
 
   // Execute charge
-  await doCharge(d1, appId, event.endUserId, event.metric, th.charge_amount_cents, value, aggId);
+  await doCharge(d1, appId, event.endUserId, event.metric, th.charge_amount_cents, value, aggId, env);
 }
 
 async function doCharge(
   d1: D1Database, appId: string, endUserExternalId: string, metric: string,
-  chargeAmountCents: number, currentValue: number, aggregateId: string,
+  chargeAmountCents: number, currentValue: number, aggregateId: string, env: any,
 ): Promise<void> {
   const app = await d1.prepare(
     `SELECT stripe_connect_account_id, connect_onboarded, subscription_status FROM apps WHERE id = ?`
@@ -93,7 +92,7 @@ async function doCharge(
 
   // Spending cap
   const now = new Date();
-  let ps = eu.period_start ? new Date(eu.period_start + 'Z') : null;
+  let ps = eu.period_start ? new Date(eu.period_start) : null;
   let spent = eu.period_spend_cents || 0;
   const period: 'weekly' | 'monthly' = eu.spending_cap_period || 'monthly';
 
@@ -110,7 +109,7 @@ async function doCharge(
 
   // Stripe charge
   const fee = Math.round(chargeAmountCents * platformFeeFraction());
-  const stripe = getStripe();
+  const stripe = getStripe(env);
 
   try {
     const pi = await stripe.paymentIntents.create({

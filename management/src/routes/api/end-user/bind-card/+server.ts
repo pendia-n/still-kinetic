@@ -18,7 +18,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
     `SELECT id, stripe_customer_id FROM end_users WHERE app_id = ? AND external_id = ?`
   ).bind(appId, endUserId).first<any>();
 
-  const stripe = getStripe();
+  const stripe = getStripe(platform!.env);
 
   if (!eu?.stripe_customer_id) {
     const customer = await stripe.customers.create({

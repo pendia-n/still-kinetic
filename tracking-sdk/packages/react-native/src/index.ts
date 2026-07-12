@@ -8,7 +8,6 @@ import type { StillKineticConfig, Metric } from './core/types';
 
 export type { StillKineticConfig, SpendingCapInput, CardBindResult, Metric, TrackEvent } from './core/types';
 export { ALL_METRICS } from './core/types';
-export { CardBindScreen } from './billing/CardBindScreen';
 
 interface ServerConfig {
   appId: string;

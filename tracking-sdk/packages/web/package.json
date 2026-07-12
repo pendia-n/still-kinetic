@@ -1,6 +1,6 @@
 {
   "name": "@stillkinetic/web-sdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Selectable-metric behavioral tracking with threshold-triggered Stripe billing, for web apps.",
   "license": "MIT",
   "main": "dist/index.cjs.js",

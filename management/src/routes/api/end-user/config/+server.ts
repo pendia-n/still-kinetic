@@ -12,7 +12,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
   ).bind(appId, apiKey).first<any>();
   if (!app) return json({ error: 'invalid app' }, { status: 401 });
 
-  const stripe = getStripe();
+  const stripe = getStripe(platform!.env);
 
   // Attach payment method to customer
   const eu = await d1.prepare(

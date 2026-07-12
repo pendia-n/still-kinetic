@@ -1,11 +1,11 @@
 import { json } from '@sveltejs/kit';
-import { createToken, verifyTempToken } from '$lib/server/auth';
-import { verifyToken } from '$lib/server/totp';
+import { createToken, verifyTempToken, makeAuthCookie } from '$lib/server/auth';
+import { verifyToken as verifyTotpToken } from '$lib/server/totp';
 import type { RequestHandler } from './$types';
 
 /**
  * Second step of login when TOTP is enabled.
- * Verifies the TOTP code and returns the real JWT.
+ * Verifies the TOTP code and returns the real JWT via HttpOnly cookie.
  */
 export const POST: RequestHandler = async ({ request, platform }) => {
   const d1 = platform!.env.DB;
@@ -30,11 +30,16 @@ export const POST: RequestHandler = async ({ request, platform }) => {
     return json({ error: 'TOTP not configured for this account.' }, { status: 400 });
   }
 
-  const valid = await verifyToken(user.totp_secret, code);
+  const valid = await verifyTotpToken(user.totp_secret, code);
   if (!valid) {
     return json({ error: 'Invalid TOTP code.' }, { status: 401 });
   }
 
   const token = await createToken({ userId: user.id, role: user.role }, platform);
-  return json({ token, role: user.role });
+  return new Response(JSON.stringify({ role: user.role }), {
+    headers: {
+      'Content-Type': 'application/json',
+      'Set-Cookie': makeAuthCookie(token),
+    },
+  });
 };

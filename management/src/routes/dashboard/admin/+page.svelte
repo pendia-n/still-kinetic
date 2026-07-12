@@ -27,7 +27,7 @@
 
   async function load() {
     const token = localStorage.getItem('sk_token');
-    const res = await fetch('/api/apps', { headers: { 'Authorization': `Bearer ${token}` } });
+    const res = await fetch('/api/apps');
     data = await res.json();
     loading = false;
   }

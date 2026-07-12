@@ -1,10 +1,12 @@
 import { json } from '@sveltejs/kit';
-import { verifyToken } from '$lib/server/auth';
+import { verifyToken, getAuthTokenFromRequest } from '$lib/server/auth';
 import { getStripe } from '$lib/server/stripe';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request, platform }) => {
-  const user = await verifyToken((request.headers.get('authorization') || '').slice(7));
+  const token = getAuthTokenFromRequest(request);
+  if (!token) return json({ error: 'unauthorized' }, { status: 401 });
+  const user = await verifyToken(token, platform);
   if (!user) return json({ error: 'unauthorized' }, { status: 401 });
 
   const d1 = platform!.env.DB;

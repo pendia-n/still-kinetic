@@ -3,8 +3,8 @@
   let loading = $state(true);
 
   async function load() {
-    const token = localStorage.getItem('sk_token');
-    const res = await fetch('/api/apps', { headers: { 'Authorization': `Bearer ${token}` } });
+    const token = '';  // Cookie auth
+    const res = await fetch('/api/apps');
     const apps = await res.json();
 
     let totalFees = 0;

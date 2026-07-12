@@ -104,7 +104,7 @@
       const data = await res.json();
       if (!res.ok) { error = data.error; return; }
       totpVerified = false;
-      localStorage.setItem('sk_token', data.token);
+      localStorage.setItem('sk_logged_in', 'true');
       localStorage.setItem('sk_role', data.role);
       window.location.href = '/dashboard/admin';
     } catch { error = 'Connection error'; }
@@ -205,7 +205,7 @@
     </form>
 
     <p style="margin-top:1rem;font-size:0.8rem">
-      Already have an account? <a href="/">Login</a>
+      Already have an account? <a href="/auth">Login</a>
     </p>
   </div>
 </div>

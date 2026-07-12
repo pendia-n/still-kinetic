@@ -40,7 +40,7 @@ export class CardBind {
 
     try {
       const setupResp = await fetch(
-        `${this.config.apiBaseUrl.replace(/\/$/, '')}/api/billing/setup-intent`,
+        `${this.config.apiBaseUrl.replace(/\/$/, '')}/api/end-user/bind-card`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-Api-Key': this.config.apiKey },
@@ -69,7 +69,7 @@ export class CardBind {
       }
 
       const capResp = await fetch(
-        `${this.config.apiBaseUrl.replace(/\/$/, '')}/api/billing/end-user-config`,
+        `${this.config.apiBaseUrl.replace(/\/$/, '')}/api/end-user/config`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-Api-Key': this.config.apiKey },

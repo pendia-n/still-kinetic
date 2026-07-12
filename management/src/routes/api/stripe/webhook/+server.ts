@@ -4,13 +4,19 @@ import { TIER_CONFIG, serializeAllowedMetrics, ALL_METRICS, parseAllowedMetrics 
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request, platform }) => {
-  const stripe = getStripe();
+  const stripe = getStripe(platform!.env);
   const sig = request.headers.get('stripe-signature');
   const raw = await request.text();
+  const secret = platform!.env.STRIPE_WEBHOOK_SECRET;
 
   let event: any;
   try {
-    event = stripe.webhooks.constructEvent(raw, sig!, platform!.env.STRIPE_WEBHOOK_SECRET);
+    event = stripe.webhooks.constructEvent(raw, sig!, secret);
+    // Verify signature asynchronously
+    const valid = await stripe.webhooks.verifySignature(raw, sig!, secret);
+    if (!valid) {
+      return new Response('Invalid signature', { status: 400 });
+    }
   } catch {
     return new Response('Invalid signature', { status: 400 });
   }

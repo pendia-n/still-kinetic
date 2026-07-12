@@ -60,7 +60,7 @@ export class StillKinetic {
         return false;
       }
       this.serverConfig = await res.json();
-      this._subscriptionActive = this.serverConfig.subscriptionStatus === 'active';
+      this._subscriptionActive = this.serverConfig?.subscriptionStatus === 'active';
       return this._subscriptionActive;
     } catch {
       console.warn('[StillKinetic] Network error fetching server config');

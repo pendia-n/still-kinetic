@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
-import { createToken } from '$lib/server/auth';
+import { createToken, makeAuthCookie } from '$lib/server/auth';
 import { hashPassword } from '$lib/server/crypto';
-import { verifyToken } from '$lib/server/totp';
+import { verifyToken as verifyTotpToken } from '$lib/server/totp';
 import type { RequestHandler } from './$types';
 
 const USERNAME_RE = /^[a-zA-Z0-9_-]{3,50}$/;
@@ -53,7 +53,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
     if (typeof totpSecret !== 'string' || totpSecret.length < 16) {
       return json({ error: 'Invalid TOTP secret.' }, { status: 400 });
     }
-    const valid = await verifyToken(totpSecret, totpCode);
+    const valid = await verifyTotpToken(totpSecret, totpCode);
     if (!valid) {
       return json({ error: 'Invalid TOTP code. Make sure your authenticator app shows the correct code.' }, { status: 400 });
     }
@@ -72,5 +72,10 @@ export const POST: RequestHandler = async ({ request, platform }) => {
   ).bind(id, username, emailCol, passwordHash, storedTotpSecret, now).run();
 
   const token = await createToken({ userId: id, role: 'admin' }, platform);
-  return json({ token, role: 'admin' });
+  return new Response(JSON.stringify({ role: 'admin' }), {
+    headers: {
+      'Content-Type': 'application/json',
+      'Set-Cookie': makeAuthCookie(token),
+    },
+  });
 };

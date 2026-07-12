@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import { verifyPassword } from '$lib/server/crypto';
-import { createToken, createTempToken, verifyTempToken } from '$lib/server/auth';
+import { createToken, createTempToken, verifyTempToken, makeAuthCookie } from '$lib/server/auth';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request, platform }) => {
@@ -35,7 +35,12 @@ export const POST: RequestHandler = async ({ request, platform }) => {
     return json({ totpRequired: true, loginToken });
   }
 
-  // No TOTP → return JWT directly
+  // No TOTP → set HttpOnly cookie
   const token = await createToken({ userId: user.id, role: user.role }, platform);
-  return json({ token, role: user.role });
+  return new Response(JSON.stringify({ role: user.role }), {
+    headers: {
+      'Content-Type': 'application/json',
+      'Set-Cookie': makeAuthCookie(token),
+    },
+  });
 };

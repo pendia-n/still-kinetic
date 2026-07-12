@@ -27,7 +27,7 @@ export function CardBindScreen({ config, defaultCap, onComplete }: Props) {
     setErrorMsg(null);
     try {
       const setupResp = await fetch(
-        `${config.apiBaseUrl.replace(/\/$/, '')}/api/billing/setup-intent`,
+        `${config.apiBaseUrl.replace(/\/$/, '')}/api/end-user/bind-card`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-Api-Key': config.apiKey },
@@ -51,7 +51,7 @@ export function CardBindScreen({ config, defaultCap, onComplete }: Props) {
       }
 
       const capResp = await fetch(
-        `${config.apiBaseUrl.replace(/\/$/, '')}/api/billing/end-user-config`,
+        `${config.apiBaseUrl.replace(/\/$/, '')}/api/end-user/config`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-Api-Key': config.apiKey },
