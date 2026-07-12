@@ -12,7 +12,7 @@
 </script>
 
 <div style="margin-bottom:1.5rem">
-  <h1 style="color:var(--gold);font-size:1.4rem">Manager Overview</h1>
+  <h1 style="color:var(--brand);font-size:1.4rem">Manager Overview</h1>
   <p style="color:var(--text-muted);font-size:0.85rem">All apps and platform revenue</p>
 </div>
 
@@ -55,9 +55,9 @@
         <tr>
           <td style="font-weight:600">{app.name}</td>
           <td style="color:var(--text-muted)">{app.owner_email || app.owner_id?.slice(0,8)}</td>
-          <td><span class="badge badge-gold">{app.tier}</span></td>
+          <td><span class="badge badge-brand">{app.tier}</span></td>
           <td>{app.connect_onboarded ? '✅' : '❌'}</td>
-          <td><span class="badge {app.subscription_status === 'active' ? 'badge-gold' : 'badge-silver'}">{app.subscription_status}</span></td>
+          <td><span class="badge {app.subscription_status === 'active' ? 'badge-brand' : 'badge-silver'}">{app.subscription_status}</span></td>
           <td style="color:var(--text-muted);font-size:0.8rem">{new Date(app.created_at).toLocaleDateString()}</td>
         </tr>
       {/each}

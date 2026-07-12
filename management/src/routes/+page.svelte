@@ -66,7 +66,7 @@
 
 <div class="auth-page">
   <div class="auth-card">
-    <h1>✦ StillKinetic</h1>
+    <h1><img src="/sk-logo.svg" alt="SK" style="height:1.5rem;vertical-align:middle;margin-right:0.3rem;border-radius:4px" /> StillKinetic</h1>
     <p>Usage-based billing platform</p>
 
     {#if !totpRequired}
@@ -84,7 +84,7 @@
           <p style="color:var(--red);font-size:0.8rem;margin-bottom:0.8rem">{error}</p>
         {/if}
 
-        <button type="submit" class="btn-gold" style="width:100%" disabled={loading}>
+        <button type="submit" class="btn-brand" style="width:100%" disabled={loading}>
           {loading ? 'Loading...' : 'Login'}
         </button>
       </form>
@@ -112,7 +112,7 @@
           <p style="color:var(--red);font-size:0.8rem;margin-bottom:0.8rem">{error}</p>
         {/if}
 
-        <button type="submit" class="btn-gold" style="width:100%" disabled={loading}>
+        <button type="submit" class="btn-brand" style="width:100%" disabled={loading}>
           {loading ? 'Verifying...' : 'Verify & Login'}
         </button>
 

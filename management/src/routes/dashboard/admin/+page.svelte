@@ -58,10 +58,10 @@
 <div style="margin-bottom:1.5rem">
   <div style="display:flex;justify-content:space-between;align-items:center">
     <div>
-      <h1 style="color:var(--gold);font-size:1.4rem">My Apps</h1>
+      <h1 style="color:var(--brand);font-size:1.4rem">My Apps</h1>
       <p style="color:var(--text-muted);font-size:0.85rem">Manage your registered applications</p>
     </div>
-    <button class="btn-gold" onclick={() => showCreate = !showCreate}>
+    <button class="btn-brand" onclick={() => showCreate = !showCreate}>
       {showCreate ? 'Cancel' : '+ New App'}
     </button>
   </div>
@@ -104,13 +104,13 @@
         </div>
       {/if}
 
-      <button type="submit" class="btn-gold">Create App</button>
+      <button type="submit" class="btn-brand">Create App</button>
     </form>
   </div>
 {/if}
 
 {#if newAppResult}
-  <div class="card" style="margin-bottom:1.5rem;border-color:var(--gold)">
+  <div class="card" style="margin-bottom:1.5rem;border-color:var(--brand)">
     <div class="section-title">✅ App Created — Save These Credentials</div>
     <div style="background:var(--bg-input);padding:1rem;border-radius:6px;font-family:monospace;font-size:0.8rem">
       <div><span style="color:var(--text-muted)">App ID:</span> {newAppResult.id}</div>
@@ -144,10 +144,10 @@
       {#each data as app}
         <tr>
           <td style="font-weight:600">{app.name}</td>
-          <td><span class="badge badge-gold">{app.tier}</span></td>
+          <td><span class="badge badge-brand">{app.tier}</span></td>
           <td style="font-family:monospace;font-size:0.75rem;color:var(--text-muted)">{app.api_key?.slice(0,16)}...</td>
           <td>{app.connect_onboarded ? '✅' : '<a href="/dashboard/admin/app/' + app.id + '" style="color:var(--red);font-size:0.8rem">Connect →</a>'}</td>
-          <td><span class="badge {app.subscription_status === 'active' ? 'badge-gold' : 'badge-silver'}">{app.subscription_status}</span></td>
+          <td><span class="badge {app.subscription_status === 'active' ? 'badge-brand' : 'badge-silver'}">{app.subscription_status}</span></td>
           <td><a href="/dashboard/admin/app/{app.id}" class="btn-ghost" style="padding:0.3rem 0.8rem;display:inline-block">Manage</a></td>
         </tr>
       {/each}

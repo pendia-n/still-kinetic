@@ -199,7 +199,7 @@
         <p style="color:var(--red);font-size:0.8rem;margin-bottom:0.8rem">{error}</p>
       {/if}
 
-      <button type="submit" class="btn-gold" style="width:100%;margin-top:0.5rem" disabled={loading}>
+      <button type="submit" class="btn-brand" style="width:100%;margin-top:0.5rem" disabled={loading}>
         {loading ? 'Creating...' : 'Register'}
       </button>
     </form>
@@ -224,5 +224,5 @@
   .totp-setup { background: #1a1a1a; border-radius: 8px; padding: 1rem; margin: 0.5rem 0; }
   .btn-outline { background: transparent; border: 1px solid #555; color: #ccc; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; }
   .btn-outline:hover { background: #222; }
-  .btn-text { background: none; border: none; color: var(--gold); cursor: pointer; text-decoration: underline; font-size: 0.75rem; padding: 0; }
+  .btn-text { background: none; border: none; color: var(--brand); cursor: pointer; text-decoration: underline; font-size: 0.75rem; padding: 0; }
 </style>

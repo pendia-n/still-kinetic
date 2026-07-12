@@ -6,9 +6,16 @@
   let loading = $state(true);
   let connectUrl = $state('');
 
+  // Add threshold
   let newMetric = $state('');
   let newThreshold = $state(100);
   let newCharge = $state(100);
+  let addError = $state('');
+
+  // Edit threshold (inline)
+  let editingId = $state<string | null>(null);
+  let editValue = $state(1);
+  let editCharge = $state(100);
 
   // Editable enabled_types
   let selectedTypes = $state<string[]>([]);
@@ -29,11 +36,15 @@
   const MAX_TYPES = { basic: 2, full: 16 };
 
   onMount(async () => {
-    const token = localStorage.getItem('sk_token');
-    const id = $page.url.pathname.split('/').pop();
-    const res = await fetch(`/api/apps/${id}`, { headers: { 'Authorization': `Bearer ${token}` } });
+    await loadApp();
+  });
+
+  function id() { return $page.url.pathname.split('/').pop(); }
+  function token() { return localStorage.getItem('sk_token'); }
+
+  async function loadApp() {
+    const res = await fetch(`/api/apps/${id()}`, { headers: { 'Authorization': `Bearer ${token()}` } });
     appData = await res.json();
-    // Parse saved allowed metrics
     try {
       const parsed = JSON.parse(appData.allowed_metrics || '[]');
       selectedTypes = Array.isArray(parsed) ? parsed : [];
@@ -41,7 +52,7 @@
       selectedTypes = [];
     }
     loading = false;
-  });
+  }
 
   function toggleType(m: string) {
     const max = MAX_TYPES[appData.tier as 'basic' | 'full'] || 16;
@@ -56,18 +67,14 @@
   async function saveTypes() {
     savingTypes = true;
     saveMessage = '';
-    const token = localStorage.getItem('sk_token');
-    const id = $page.url.pathname.split('/').pop();
-    const res = await fetch(`/api/apps/${id}`, {
+    const res = await fetch(`/api/apps/${id()}`, {
       method: 'PATCH',
-      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      headers: { 'Authorization': `Bearer ${token()}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ enabled_types: selectedTypes }),
     });
     if (res.ok) {
       saveMessage = '✅ Saved';
-      // Reload
-      const reload = await fetch(`/api/apps/${id}`, { headers: { 'Authorization': `Bearer ${token}` } });
-      appData = await reload.json();
+      await loadApp();
     } else {
       const err = await res.json();
       saveMessage = `❌ ${err.error || 'Failed'}`;
@@ -78,12 +85,10 @@
   async function subscribe() {
     subscribing = true;
     subscribeError = '';
-    const token = localStorage.getItem('sk_token');
-    const id = $page.url.pathname.split('/').pop();
     const res = await fetch('/api/stripe/subscription', {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ appId: id }),
+      headers: { 'Authorization': `Bearer ${token()}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ appId: id() }),
     });
     const data = await res.json();
     if (data.url) {
@@ -95,27 +100,86 @@
   }
 
   async function connectStripe() {
-    const token = localStorage.getItem('sk_token');
-    const id = $page.url.pathname.split('/').pop();
     const res = await fetch('/api/stripe/connect', {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ appId: id }),
+      headers: { 'Authorization': `Bearer ${token()}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ appId: id() }),
     });
     const data = await res.json();
     if (data.url) window.open(data.url, '_blank');
   }
 
+  function validateAdd(): boolean {
+    addError = '';
+    if (!newMetric) { addError = 'Select an action'; return false; }
+    if (newThreshold < 1) { addError = 'Threshold min is 1'; return false; }
+    if (newCharge < 100) { addError = 'Charge min is 100 cents ($1.00)'; return false; }
+    return true;
+  }
+
   async function addThreshold() {
-    const token = localStorage.getItem('sk_token');
-    const id = $page.url.pathname.split('/').pop();
-    await fetch(`/api/apps/${id}/thresholds`, {
+    if (!validateAdd()) return;
+    const res = await fetch(`/api/apps/${id()}/thresholds`, {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      headers: { 'Authorization': `Bearer ${token()}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ metric: newMetric, thresholdValue: newThreshold, chargeAmountCents: newCharge }),
     });
-    const res = await fetch(`/api/apps/${id}`, { headers: { 'Authorization': `Bearer ${token}` } });
-    appData = await res.json();
+    if (!res.ok) {
+      const err = await res.json();
+      addError = err.error || 'Failed';
+      return;
+    }
+    addError = '';
+    await loadApp();
+  }
+
+  function startEdit(t: any) {
+    editingId = t.id;
+    editValue = t.threshold_value;
+    editCharge = t.charge_amount_cents;
+  }
+
+  function cancelEdit() {
+    editingId = null;
+  }
+
+  function validateEdit(): boolean {
+    addError = '';
+    if (editValue < 1) { addError = 'Threshold min is 1'; return false; }
+    if (editCharge < 100) { addError = 'Charge min is 100 cents ($1.00)'; return false; }
+    return true;
+  }
+
+  async function saveEdit(t: any) {
+    if (!validateEdit()) return;
+    const res = await fetch(`/api/apps/${id()}/thresholds`, {
+      method: 'PATCH',
+      headers: { 'Authorization': `Bearer ${token()}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ thresholdId: t.id, thresholdValue: editValue, chargeAmountCents: editCharge }),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      addError = err.error || 'Failed';
+      return;
+    }
+    addError = '';
+    editingId = null;
+    await loadApp();
+  }
+
+  async function deleteThreshold(thresholdId: string) {
+    const res = await fetch(`/api/apps/${id()}/thresholds`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token()}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ thresholdId }),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      addError = err.error || 'Failed';
+      return;
+    }
+    addError = '';
+    await loadApp();
   }
 </script>
 
@@ -124,21 +188,21 @@
 {:else if appData}
   <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:1.5rem">
     <div>
-      <h1 style="color:var(--gold);font-size:1.4rem">{appData.name}</h1>
+      <h1 style="color:var(--brand);font-size:1.4rem">{appData.name}</h1>
       <p style="color:var(--text-muted);font-size:0.85rem">ID: {appData.id}</p>
     </div>
     <div style="text-align:right">
-      <span class="badge badge-gold">{appData.tier}</span>
-      <span class="badge" class:badge-gold={appData.subscription_status === 'active'} class:badge-silver={appData.subscription_status !== 'active'} style="margin-left:0.3rem">{appData.subscription_status}</span>
+      <span class="badge badge-brand">{appData.tier}</span>
+      <span class="badge" class:badge-brand={appData.subscription_status === 'active'} class:badge-silver={appData.subscription_status !== 'active'} style="margin-left:0.3rem">{appData.subscription_status}</span>
     </div>
   </div>
 
   <!-- Subscription inactive banner -->
   {#if appData.subscription_status !== 'active'}
-    <div class="card" style="margin-bottom:1rem;border-color:var(--red);background:rgba(255,80,80,0.08)">
+    <div class="card" style="margin-bottom:1rem;border-color:var(--red);background:rgba(248,88,34,0.06)">
       <div class="section-title" style="color:var(--red)">⚠️ Subscription Inactive</div>
       <p style="margin-bottom:0.5rem">Your app's subscription is <strong>{appData.subscription_status}</strong>. Tracking is paused — end users will not experience any errors, but no data will be collected.</p>
-      <button class="btn-gold" onclick={subscribe} disabled={subscribing}>
+      <button class="btn-brand" onclick={subscribe} disabled={subscribing}>
         {subscribing ? 'Processing...' : 'Subscribe Now — ' + (appData.tier === 'full' ? '$10/week' : '$2/week')}
       </button>
       {#if subscribeError}
@@ -146,8 +210,8 @@
       {/if}
     </div>
   {:else}
-    <div class="card" style="margin-bottom:1rem;border-color:var(--gold);background:rgba(255,215,0,0.05)">
-      <div class="section-title" style="color:var(--gold)">✅ Subscription Active</div>
+    <div class="card" style="margin-bottom:1rem;border-color:var(--brand);background:rgba(248,88,34,0.04)">
+      <div class="section-title" style="color:var(--brand)">✅ Subscription Active</div>
       <button class="btn-ghost" onclick={subscribe}>Manage Subscription</button>
     </div>
   {/if}
@@ -159,8 +223,8 @@
       {#each ALL_METRICS as m}
         <button
           type="button"
-          class="badge {selectedTypes.includes(m) ? 'badge-gold' : 'badge-silver'}"
-          style="cursor:pointer;border:none;padding:0.3rem 0.6rem;font-size:0.75rem"
+          class="badge {selectedTypes.includes(m) ? 'badge-brand' : 'badge-silver'}"
+          style="cursor:pointer;border:none;padding:0.3rem 0.6rem;font-size:0.75rem;border-radius:4px"
           onclick={() => toggleType(m)}
           disabled={!selectedTypes.includes(m) && selectedTypes.length >= (MAX_TYPES[appData.tier as 'basic' | 'full'] || 16)}
         >
@@ -169,7 +233,7 @@
       {/each}
     </div>
     <div style="display:flex;align-items:center;gap:1rem">
-      <button class="btn-gold" onclick={saveTypes} disabled={savingTypes}>
+      <button class="btn-brand" onclick={saveTypes} disabled={savingTypes}>
         {savingTypes ? 'Saving...' : 'Save Actions'}
       </button>
       {#if saveMessage}
@@ -182,11 +246,11 @@
   <div class="card" style="margin-bottom:1rem">
     <div class="section-title">Stripe Connect (Receiving Payouts)</div>
     {#if appData.connect_onboarded}
-      <p style="color:var(--gold)">✅ Connected — payouts will be sent to your Stripe account</p>
+      <p style="color:var(--brand)">✅ Connected — payouts will be sent to your Stripe account</p>
       <button class="btn-ghost" style="margin-top:0.5rem" onclick={connectStripe}>Manage Stripe Account</button>
     {:else}
       <p style="color:var(--text-muted);margin-bottom:0.5rem">Connect your Stripe account to receive payouts (75% of charges).</p>
-      <button class="btn-gold" onclick={connectStripe}>Connect Stripe</button>
+      <button class="btn-brand" onclick={connectStripe}>Connect Stripe</button>
     {/if}
   </div>
 
@@ -204,31 +268,61 @@
   <div class="card" style="margin-bottom:1rem">
     <div class="section-title">Billing Thresholds</div>
 
+    {#if appData.thresholds?.length > 0 && !appData.connect_onboarded}
+      <div style="margin-bottom:1rem;padding:0.8rem;border:1px solid var(--brand);border-radius:6px;background:rgba(248,88,34,0.06)">
+        <p style="color:var(--brand);font-weight:600;font-size:0.85rem">⚠️ Thresholds configured but Stripe Connect not linked</p>
+        <p style="color:var(--text-muted);font-size:0.8rem;margin-top:0.3rem">
+          End users will NOT be charged until you complete Stripe onboarding above. Your thresholds will start billing automatically once connected.
+        </p>
+      </div>
+    {/if}
+
     {#if appData.thresholds?.length > 0}
-      <table style="margin-bottom:1rem">
-        <thead>
-          <tr>
-            <th>Action</th>
-            <th>Threshold</th>
-            <th>Charge</th>
-          </tr>
-        </thead>
-        <tbody>
-          {#each appData.thresholds as t}
+      <div class="threshold-table-wrapper">
+        <table style="margin-bottom:1rem">
+          <thead>
             <tr>
-              <td><span class="badge badge-silver">{t.metric}</span></td>
-              <td>{t.threshold_value}</td>
-              <td>${(t.charge_amount_cents / 100).toFixed(2)}</td>
+              <th>Action</th>
+              <th>Threshold (min: 1)</th>
+              <th>Charge (min: $1.00)</th>
+              <th style="width:120px">Actions</th>
             </tr>
-          {/each}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {#each appData.thresholds as t}
+              <tr>
+                {#if editingId === t.id}
+                  <td><span class="badge badge-brand">{t.metric}</span></td>
+                  <td>
+                    <input type="number" class="edit-input-sm" bind:value={editValue} min={1} />
+                  </td>
+                  <td>
+                    <input type="number" class="edit-input-sm" bind:value={editCharge} min={100} />
+                  </td>
+                  <td style="white-space:nowrap">
+                    <button class="btn-brand" style="padding:0.25rem 0.6rem;font-size:0.75rem" onclick={() => saveEdit(t)}>Save</button>
+                    <button class="btn-ghost" style="padding:0.25rem 0.6rem;font-size:0.75rem" onclick={cancelEdit}>Cancel</button>
+                  </td>
+                {:else}
+                  <td><span class="badge badge-brand">{t.metric}</span></td>
+                  <td>{t.threshold_value}</td>
+                  <td>${(t.charge_amount_cents / 100).toFixed(2)}</td>
+                  <td style="white-space:nowrap">
+                    <button class="btn-ghost" style="padding:0.25rem 0.6rem;font-size:0.75rem" onclick={() => startEdit(t)}>✏️ Edit</button>
+                    <button class="btn-danger" style="padding:0.25rem 0.6rem;font-size:0.75rem" onclick={() => deleteThreshold(t.id)}>🗑️ Delete</button>
+                  </td>
+                {/if}
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      </div>
     {:else}
       <p style="color:var(--text-muted);margin-bottom:1rem">No thresholds set. Add one below.</p>
     {/if}
 
-    <form onsubmit={(e) => { e.preventDefault(); addThreshold(); }} style="display:flex;gap:0.5rem;align-items:end">
-      <div class="form-group" style="flex:1">
+    <form onsubmit={(e) => { e.preventDefault(); addThreshold(); }} class="threshold-add-form">
+      <div class="form-group" style="flex:1;min-width:140px">
         <label>Action</label>
         <select bind:value={newMetric}>
           {#each ALL_METRICS as m}
@@ -237,15 +331,19 @@
         </select>
       </div>
       <div class="form-group" style="width:100px">
-        <label>Threshold</label>
+        <label>Threshold (≥1)</label>
         <input type="number" bind:value={newThreshold} min={1} />
       </div>
       <div class="form-group" style="width:120px">
-        <label>Charge (cents)</label>
-        <input type="number" bind:value={newCharge} min={1} />
+        <label>Charge cents (≥100)</label>
+        <input type="number" bind:value={newCharge} min={100} />
       </div>
-      <button type="submit" class="btn-gold">Add</button>
+      <button type="submit" class="btn-brand" style="align-self:end;margin-bottom:1rem">Add</button>
     </form>
+
+    {#if addError}
+      <p style="color:var(--red);font-size:0.85rem;margin-top:0.5rem">{addError}</p>
+    {/if}
   </div>
 
   <!-- Stats -->

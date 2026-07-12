@@ -34,7 +34,7 @@
   {:else}
     <div class="app-layout">
       <aside class="sidebar">
-        <h2>✦ StillKinetic</h2>
+        <h2><img src="/sk-logo.svg" alt="SK" style="height:1.4rem;width:1.4rem;vertical-align:middle;border-radius:3px" /> StillKinetic</h2>
         <nav>
           {#if role === 'manager'}
             <a href="/dashboard" class:active={$page.url.pathname === '/dashboard'}>📊 Overview</a>

@@ -26,7 +26,7 @@
 </script>
 
 <div style="margin-bottom:1.5rem">
-  <h1 style="color:var(--gold);font-size:1.4rem">Earnings</h1>
+  <h1 style="color:var(--brand);font-size:1.4rem">Earnings</h1>
   <p style="color:var(--text-muted);font-size:0.85rem">Platform revenue overview (Manager only)</p>
 </div>
 
