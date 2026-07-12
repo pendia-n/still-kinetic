@@ -71,6 +71,6 @@ export const POST: RequestHandler = async ({ request, platform }) => {
      VALUES (?, ?, ?, ?, ?, 'admin', ?)`
   ).bind(id, username, emailCol, passwordHash, storedTotpSecret, now).run();
 
-  const token = await createToken({ userId: id, role: 'admin' });
+  const token = await createToken({ userId: id, role: 'admin' }, platform);
   return json({ token, role: 'admin' });
 };

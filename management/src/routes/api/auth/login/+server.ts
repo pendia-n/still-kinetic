@@ -31,11 +31,11 @@ export const POST: RequestHandler = async ({ request, platform }) => {
       userId: user.id,
       role: user.role,
       purpose: 'totp_login',
-    });
+    }, platform);
     return json({ totpRequired: true, loginToken });
   }
 
   // No TOTP → return JWT directly
-  const token = await createToken({ userId: user.id, role: user.role });
+  const token = await createToken({ userId: user.id, role: user.role }, platform);
   return json({ token, role: user.role });
 };

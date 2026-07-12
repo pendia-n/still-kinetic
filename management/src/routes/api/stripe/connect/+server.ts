@@ -14,7 +14,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
   if (!app) return json({ error: 'not found' }, { status: 404 });
   if (app.owner_id !== user.userId) return json({ error: 'forbidden' }, { status: 403 });
 
-  const stripe = getStripe();
+  const stripe = getStripe(platform!.env);
 
   if (!app.stripe_connect_account_id) {
     const account = await stripe.accounts.create({

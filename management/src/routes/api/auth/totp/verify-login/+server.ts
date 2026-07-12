@@ -16,7 +16,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
   }
 
   // Decode the temp token to get userId
-  const payload = await verifyTempToken(loginToken);
+  const payload = await verifyTempToken(loginToken, platform);
   if (!payload || payload.purpose !== 'totp_login') {
     return json({ error: 'Invalid or expired login token.' }, { status: 401 });
   }
@@ -35,6 +35,6 @@ export const POST: RequestHandler = async ({ request, platform }) => {
     return json({ error: 'Invalid TOTP code.' }, { status: 401 });
   }
 
-  const token = await createToken({ userId: user.id, role: user.role });
+  const token = await createToken({ userId: user.id, role: user.role }, platform);
   return json({ token, role: user.role });
 };

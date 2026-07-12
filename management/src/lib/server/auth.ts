@@ -1,7 +1,5 @@
 import { SignJWT, jwtVerify } from 'jose';
 
-const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'dev-secret-change-in-prod');
-
 export interface TokenPayload {
   userId: string;
   role: string;
@@ -11,33 +9,36 @@ export interface TempTokenPayload extends TokenPayload {
   purpose: string;
 }
 
-export async function createToken(payload: TokenPayload): Promise<string> {
+function getSecret(platform?: any): Uint8Array {
+  const key = platform?.env?.JWT_SECRET || (typeof process !== 'undefined' ? process.env.JWT_SECRET : undefined);
+  if (!key) throw new Error('JWT_SECRET not available');
+  return new TextEncoder().encode(key);
+}
+
+export async function createToken(payload: TokenPayload, platform?: any): Promise<string> {
   return new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setExpirationTime('7d')
-    .sign(secret);
+    .sign(getSecret(platform));
 }
 
-/**
- * Short-lived token for TOTP login two-step flow (5 minutes).
- */
-export async function createTempToken(payload: TempTokenPayload): Promise<string> {
+export async function createTempToken(payload: TempTokenPayload, platform?: any): Promise<string> {
   return new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setExpirationTime('5m')
-    .sign(secret);
+    .sign(getSecret(platform));
 }
 
-export async function verifyToken(token: string): Promise<TokenPayload | null> {
+export async function verifyToken(token: string, platform?: any): Promise<TokenPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, getSecret(platform));
     return payload as unknown as TokenPayload;
   } catch { return null; }
 }
 
-export async function verifyTempToken(token: string): Promise<TempTokenPayload | null> {
+export async function verifyTempToken(token: string, platform?: any): Promise<TempTokenPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, getSecret(platform));
     return payload as unknown as TempTokenPayload;
   } catch { return null; }
 }
