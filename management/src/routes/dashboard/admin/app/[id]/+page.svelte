@@ -25,6 +25,9 @@
   // Subscribe
   let subscribing = $state(false);
   let subscribeError = $state('');
+  let subscription = $state<any>(null);
+  let managingSubscription = $state(false);
+  let subscriptionMessage = $state('');
 
   const ALL_METRICS = [
     'press_count', 'scroll_length', 'scroll_speed', 'stay_duration', 'type_speed',
@@ -43,8 +46,13 @@
   function token() { return ''; }  // Cookie auth
 
   async function loadApp() {
-    const res = await fetch(`/api/apps/${id()}`);
-    appData = await res.json();
+    const [appRes, subscriptionRes] = await Promise.all([
+      fetch(`/api/apps/${id()}`),
+      fetch(`/api/stripe/subscription/manage?appId=${encodeURIComponent(id())}`),
+    ]);
+    appData = await appRes.json();
+    const subscriptionData = await subscriptionRes.json();
+    subscription = subscriptionRes.ok ? subscriptionData.subscription : null;
     try {
       const parsed = JSON.parse(appData.allowed_metrics || '[]');
       selectedTypes = Array.isArray(parsed) ? parsed : [];
@@ -97,6 +105,36 @@
       subscribeError = data.error || 'Failed to create subscription';
     }
     subscribing = false;
+  }
+
+  async function setCancelAtPeriodEnd(cancelAtPeriodEnd: boolean) {
+    managingSubscription = true;
+    subscriptionMessage = '';
+    const res = await fetch('/api/stripe/subscription/manage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ appId: id(), cancelAtPeriodEnd }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      subscription = {
+        ...subscription,
+        cancelAtPeriodEnd: data.cancelAtPeriodEnd,
+        currentPeriodEnd: data.currentPeriodEnd,
+      };
+      subscriptionMessage = cancelAtPeriodEnd
+        ? 'Cancellation scheduled. Your app remains active until the current paid period ends.'
+        : 'Subscription cancellation undone.';
+    } else {
+      subscriptionMessage = `❌ ${data.error || 'Failed to update subscription'}`;
+    }
+    managingSubscription = false;
+  }
+
+  function periodEndLabel(): string {
+    return subscription?.currentPeriodEnd
+      ? new Date(subscription.currentPeriodEnd).toLocaleString()
+      : 'the end of the current billing period';
   }
 
   async function connectStripe() {
@@ -212,7 +250,20 @@
   {:else}
     <div class="card" style="margin-bottom:1rem;border-color:var(--brand);background:rgba(248,88,34,0.04)">
       <div class="section-title" style="color:var(--brand)">✅ Subscription Active</div>
-      <button class="btn-ghost" onclick={subscribe}>Manage Subscription</button>
+      {#if subscription?.cancelAtPeriodEnd}
+        <p style="margin-bottom:0.7rem">Cancellation is scheduled for <strong>{periodEndLabel()}</strong>. No renewal charge will be made after that period.</p>
+        <button class="btn-brand" onclick={() => setCancelAtPeriodEnd(false)} disabled={managingSubscription}>
+          {managingSubscription ? 'Updating...' : 'Keep Subscription'}
+        </button>
+      {:else}
+        <p style="margin-bottom:0.7rem">Your app remains active until you cancel. Cancellation takes effect at the end of the current paid period.</p>
+        <button class="btn-danger" onclick={() => setCancelAtPeriodEnd(true)} disabled={managingSubscription}>
+          {managingSubscription ? 'Updating...' : 'Cancel at Period End'}
+        </button>
+      {/if}
+      {#if subscriptionMessage}
+        <p style="margin-top:0.7rem;font-size:0.85rem">{subscriptionMessage}</p>
+      {/if}
     </div>
   {/if}
 

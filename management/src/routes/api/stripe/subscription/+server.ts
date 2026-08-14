@@ -24,9 +24,13 @@ export const POST: RequestHandler = async ({ request, platform }) => {
     const { appId } = await request.json();
 
     const app = await d1.prepare(
-      `SELECT id, name, tier, subscription_status, stripe_customer_id FROM apps WHERE id = ? AND owner_id = ?`
+      `SELECT id, name, tier, subscription_status, stripe_customer_id, stripe_subscription_id FROM apps WHERE id = ? AND owner_id = ?`
     ).bind(appId, user.userId).first<any>();
     if (!app) return json({ error: 'not found' }, { status: 404 });
+
+    if (app.stripe_subscription_id && app.subscription_status !== 'inactive') {
+      return json({ error: 'subscription already exists; use the cancellation controls to manage it' }, { status: 409 });
+    }
 
     // Read price ID from platform env (not process.env — secrets not in process.env)
     const env = platform!.env as any;

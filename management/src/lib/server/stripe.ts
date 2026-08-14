@@ -80,6 +80,17 @@ class StripeClient {
     },
   };
 
+  subscriptions: any = {
+    retrieve: (id: string) => this.request('GET', `/subscriptions/${id}`),
+    update: (id: string, params: { cancel_at_period_end?: boolean }) => {
+      const body = new URLSearchParams();
+      if (typeof params.cancel_at_period_end === 'boolean') {
+        body.set('cancel_at_period_end', String(params.cancel_at_period_end));
+      }
+      return this.request('POST', `/subscriptions/${id}`, body);
+    },
+  };
+
   accounts: any = {
     create: (params: any) => {
       const body = new URLSearchParams();
