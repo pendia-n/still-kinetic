@@ -29,12 +29,36 @@
   let managingSubscription = $state(false);
   let subscriptionMessage = $state('');
 
-  const ALL_METRICS = [
-    'press_count', 'scroll_length', 'scroll_speed', 'stay_duration', 'type_speed',
-    'swipe_count', 'pinch_zoom_count', 'long_press_count', 'form_submit_count',
-    'tab_switch_count', 'search_count', 'video_play_count', 'video_watch_duration',
-    'file_download_count', 'share_count', 'mouse_distance',
+  // Existing SDK metrics grouped for configuration display. These are only
+  // presentation groups; metric IDs remain unchanged across SDK and backend.
+  const metricGroups = [
+    {
+      name: 'Count',
+      unit: 'count',
+      metrics: ['press_count', 'swipe_count', 'pinch_zoom_count', 'long_press_count',
+        'form_submit_count', 'tab_switch_count', 'search_count', 'video_play_count',
+        'file_download_count', 'share_count'],
+    },
+    {
+      name: 'Distance',
+      unit: 'px',
+      metrics: ['scroll_length', 'mouse_distance'],
+    },
+    {
+      name: 'Duration',
+      unit: 'ms',
+      metrics: ['stay_duration', 'video_watch_duration'],
+    },
+    {
+      name: 'Speed',
+      unit: 'varies by metric',
+      metrics: ['scroll_speed', 'type_speed'],
+    },
   ];
+
+  const ALL_METRICS = metricGroups.flatMap(group => group.metrics);
+  const metricInfo = (metric: string) => metricGroups.find(group => group.metrics.includes(metric));
+  const metricUnit = (metric: string) => metric === 'type_speed' ? 'CPM' : metric === 'scroll_speed' ? 'px/ms' : metricInfo(metric)?.unit || 'value';
 
   const MAX_TYPES = { basic: 2, full: 16 };
 
@@ -270,19 +294,30 @@
   <!-- Allowed Actions (editable) -->
   <div class="card" style="margin-bottom:1rem">
     <div class="section-title">Allowed Actions (max {MAX_TYPES[appData.tier as 'basic' | 'full'] || 16})</div>
-    <div style="display:flex;flex-wrap:wrap;gap:0.4rem;margin:0.5rem 0">
-      {#each ALL_METRICS as m}
-        <button
-          type="button"
-          class="badge {selectedTypes.includes(m) ? 'badge-brand' : 'badge-silver'}"
-          style="cursor:pointer;border:none;padding:0.3rem 0.6rem;font-size:0.75rem;border-radius:4px"
-          onclick={() => toggleType(m)}
-          disabled={!selectedTypes.includes(m) && selectedTypes.length >= (MAX_TYPES[appData.tier as 'basic' | 'full'] || 16)}
-        >
-          {m} {selectedTypes.includes(m) ? '×' : '+'}
-        </button>
-      {/each}
-    </div>
+    <p style="color:var(--text-muted);font-size:0.82rem;margin:0.4rem 0 0.8rem">
+      Select existing SDK metrics. Threshold values use the unit shown for each metric.
+    </p>
+    {#each metricGroups as group}
+      <div style="margin:0.8rem 0">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.35rem">
+          <strong>{group.name}</strong>
+          <span style="color:var(--text-muted);font-size:0.75rem">Unit: {group.unit}</span>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:0.4rem">
+          {#each group.metrics as m}
+            <button
+              type="button"
+              class="badge {selectedTypes.includes(m) ? 'badge-brand' : 'badge-silver'}"
+              style="cursor:pointer;border:none;padding:0.3rem 0.6rem;font-size:0.75rem;border-radius:4px"
+              onclick={() => toggleType(m)}
+              disabled={!selectedTypes.includes(m) && selectedTypes.length >= (MAX_TYPES[appData.tier as 'basic' | 'full'] || 16)}
+            >
+              {m} · {metricUnit(m)} {selectedTypes.includes(m) ? '×' : '+'}
+            </button>
+          {/each}
+        </div>
+      </div>
+    {/each}
     <div style="display:flex;align-items:center;gap:1rem">
       <button class="btn-brand" onclick={saveTypes} disabled={savingTypes}>
         {savingTypes ? 'Saving...' : 'Save Actions'}
@@ -334,6 +369,7 @@
           <thead>
             <tr>
               <th>Action</th>
+              <th>Unit</th>
               <th>Threshold (min: 1)</th>
               <th>Charge (min: $1.00)</th>
               <th style="width:120px">Actions</th>
@@ -344,6 +380,7 @@
               <tr>
                 {#if editingId === t.id}
                   <td><span class="badge badge-brand">{t.metric}</span></td>
+                  <td>{metricUnit(t.metric)}</td>
                   <td>
                     <input type="number" class="edit-input-sm" bind:value={editValue} min={1} />
                   </td>
@@ -356,6 +393,7 @@
                   </td>
                 {:else}
                   <td><span class="badge badge-brand">{t.metric}</span></td>
+                  <td>{metricUnit(t.metric)}</td>
                   <td>{t.threshold_value}</td>
                   <td>${(t.charge_amount_cents / 100).toFixed(2)}</td>
                   <td style="white-space:nowrap">
