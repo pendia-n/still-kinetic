@@ -1,7 +1,7 @@
 {
-  "name": "@stillkinetic/web-sdk",
+  "name": "@stillkinetic/desktop-sdk",
   "version": "0.1.5",
-  "description": "Selectable-metric behavioral tracking with threshold-triggered Stripe billing, for web apps.",
+  "description": "StillKinetic tracking and Stripe billing-consent UI for Electron, Tauri, and npm-compatible desktop WebViews.",
   "license": "MIT",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -23,9 +23,11 @@
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
+    "@stillkinetic/web-sdk": "^0.1.5",
     "@stripe/stripe-js": "^3.0.0"
   },
   "devDependencies": {
+    "@stillkinetic/web-sdk": "^0.1.5",
     "@stripe/stripe-js": "^3.5.0",
     "tsup": "^8.0.2",
     "typescript": "^5.9.3"

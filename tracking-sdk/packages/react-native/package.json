@@ -3,9 +3,16 @@
   "version": "0.1.5",
   "description": "Selectable-metric behavioral tracking with threshold-triggered Stripe billing, for React Native apps.",
   "license": "MIT",
-  "main": "dist/index.cjs.js",
-  "module": "dist/index.esm.js",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
   "files": [
     "dist"
   ],

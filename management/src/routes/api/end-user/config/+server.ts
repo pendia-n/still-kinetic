@@ -14,13 +14,14 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 
   const stripe = getStripe(platform!.env);
 
-  // Attach payment method to customer
+  // The SetupIntent was created with this customer, so Stripe automatically
+  // attached the payment method when confirmation succeeded. Set it as the
+  // default for future off-session PaymentIntents and persist the user's cap.
   const eu = await d1.prepare(
     `SELECT id, stripe_customer_id FROM end_users WHERE app_id = ? AND external_id = ?`
   ).bind(appId, endUserId).first<any>();
   if (!eu?.stripe_customer_id) return json({ error: 'no customer' }, { status: 400 });
 
-  await stripe.paymentMethods.attach(paymentMethodId, { customer: eu.stripe_customer_id });
   await stripe.customers.update(eu.stripe_customer_id, {
     invoice_settings: { default_payment_method: paymentMethodId },
   });

@@ -343,6 +343,7 @@
   <!-- SDK Credentials -->
   <div class="card" style="margin-bottom:1rem">
     <div class="section-title">SDK Credentials</div>
+    <a href="/dashboard/admin/app/{appData.id}/guide" class="btn-ghost" style="display:inline-block;margin-bottom:0.7rem">📖 Open Integration Guide</a>
     <div style="background:var(--bg-input);padding:0.8rem;border-radius:6px;font-family:monospace;font-size:0.8rem">
       <div><span style="color:var(--text-muted)">App ID:</span> {appData.id}</div>
       <div><span style="color:var(--text-muted)">API Key:</span> <span style="color:var(--red)">{appData.api_key}</span></div>

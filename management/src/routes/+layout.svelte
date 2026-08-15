@@ -22,7 +22,7 @@
 </script>
 
 {#if ready}
-  {#if $page.url.pathname === '/' || $page.url.pathname === '/auth' || $page.url.pathname === '/register'}
+  {#if $page.url.pathname === '/' || $page.url.pathname === '/guide' || $page.url.pathname === '/auth' || $page.url.pathname === '/register'}
     <slot />
   {:else if !role}
     <div class="auth-page">
@@ -43,6 +43,7 @@
           {:else}
             <a href="/dashboard/admin" class:active={$page.url.pathname.startsWith('/dashboard/admin')}>📱 My Apps</a>
           {/if}
+          <a href="/guide" class:active={$page.url.pathname === '/guide'}>📖 Developer Guide</a>
           <button class="btn-ghost" style="margin-top:2rem;width:100%" onclick={logout}>Logout</button>
         </nav>
       </aside>
