@@ -31,7 +31,7 @@ export function CardBindScreen({ config, defaultCap, onComplete }: Props) {
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-Api-Key': config.apiKey },
-          body: JSON.stringify({ appId: config.appId, endUserId: config.endUserId }),
+          body: JSON.stringify({ appId: config.appId, apiKey: config.apiKey, endUserId: config.endUserId }),
         }
       );
       if (!setupResp.ok) throw new Error(`Setup failed (${setupResp.status})`);
@@ -57,6 +57,7 @@ export function CardBindScreen({ config, defaultCap, onComplete }: Props) {
           headers: { 'Content-Type': 'application/json', 'X-Api-Key': config.apiKey },
           body: JSON.stringify({
             appId: config.appId,
+            apiKey: config.apiKey,
             endUserId: config.endUserId,
             paymentMethodId,
             spendingCapCents: amountCents,

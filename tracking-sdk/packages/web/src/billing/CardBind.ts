@@ -46,6 +46,7 @@ export class CardBind {
           headers: { 'Content-Type': 'application/json', 'X-Api-Key': this.config.apiKey },
           body: JSON.stringify({
             appId: this.config.appId,
+            apiKey: this.config.apiKey,
             endUserId: this.config.endUserId,
           }),
         }
@@ -75,6 +76,7 @@ export class CardBind {
           headers: { 'Content-Type': 'application/json', 'X-Api-Key': this.config.apiKey },
           body: JSON.stringify({
             appId: this.config.appId,
+            apiKey: this.config.apiKey,
             endUserId: this.config.endUserId,
             paymentMethodId,
             spendingCapCents: cap.amountCents,
