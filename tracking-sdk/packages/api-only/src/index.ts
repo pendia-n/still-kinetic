@@ -6,6 +6,7 @@ import {
   type SubmittedUsageEvent,
   type TrackResult,
   type UsageEvent,
+  type AccessDecision,
 } from './types';
 
 export type {
@@ -15,6 +16,8 @@ export type {
   SubmittedUsageEvent,
   TrackResult,
   UsageEvent,
+  AccessDecision,
+  AccessStatus,
 } from './types';
 export { ALL_METRICS } from './types';
 
@@ -96,16 +99,29 @@ export class StillKineticApi {
     });
     if (!response.ok) throw await this.toError(response, `Usage submission failed (${response.status}).`);
 
+    const result = await response.json().catch(() => ({})) as { access?: AccessDecision[] };
+    for (const decision of result.access ?? []) this.config.onAccessDecision?.(decision);
     return {
       ok: true,
       submitted: normalized.length,
       chargeStatus: 'not_returned_by_ingestion_api',
+      access: result.access,
     };
+  }
+
+  async getAccessStatus(metric?: Metric, endUserId = this.config.endUserId): Promise<AccessDecision> {
+    if (!endUserId) throw new StillKineticApiError('endUserId is required for access checks.');
+    const query = new URLSearchParams({ appId: this.config.appId, apiKey: this.config.apiKey, endUserId });
+    if (metric) query.set('metric', metric);
+    const response = await this.request(`${this.baseUrl}/api/end-user/access?${query}`);
+    if (!response.ok) throw await this.toError(response, `Access status request failed (${response.status}).`);
+    return await response.json() as AccessDecision;
   }
 
   private normalizeEvent(event: UsageEvent): SubmittedUsageEvent {
     const endUserId = event.endUserId ?? this.config.endUserId;
-    const pageId = event.pageId ?? this.config.pageId ?? '_default';
+    const page = event.pageId ?? this.config.pageId ?? '_default';
+    const pageId = event.visitId ? `${page}::visit:${event.visitId}` : page;
     if (!endUserId) throw new StillKineticApiError('endUserId is required for every usage event.');
     if (!ALL_METRICS.includes(event.metric)) {
       throw new StillKineticApiError(`Unsupported metric: ${String(event.metric)}.`);

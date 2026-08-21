@@ -61,6 +61,21 @@ export interface StillKineticConfig {
   batchIntervalMs?: number;
   /** Identifier for the current page/screen. Defaults to location.pathname on web. */
   pageId?: string;
+  /** Optional caller-controlled visit identifier. A new one is generated per start() by default. */
+  visitId?: string;
+  /** Called when ingestion reports that the end user must stop or increase their cap. */
+  onAccessDecision?: (decision: AccessDecision) => void;
+}
+
+export type AccessStatus = 'allowed' | 'cap_reached' | 'payment_required' | 'subscription_inactive' | 'connect_required';
+export interface AccessDecision {
+  allowed: boolean;
+  status: AccessStatus;
+  message: string;
+  remainingCents: number | null;
+  capCents: number | null;
+  period: 'weekly' | 'monthly' | null;
+  spentCents: number;
 }
 
 export interface SpendingCapInput {

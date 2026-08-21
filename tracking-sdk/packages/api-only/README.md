@@ -58,4 +58,6 @@ If no card is bound, the backend records `skipped_no_card`. If the charge would 
 
 `track()` confirms that the management ingestion API accepted the event. Threshold processing is asynchronous, so the response does not confirm whether a Stripe charge succeeded, failed, or was skipped.
 
+Use `await sk.getAccessStatus('stay_duration')` before allowing the next API operation. `track()` also returns access decisions when the backend detects that the end user must stop or increase their cap. Supply a fresh `visitId` for each logical visit when cumulative metrics should reset between visits.
+
 Only the fixed metrics enabled for the app are accepted. The current management backend does not support arbitrary custom metric names.

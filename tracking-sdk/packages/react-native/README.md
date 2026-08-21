@@ -70,3 +70,5 @@ function BillingSetupScreen({ navigation }) {
 ## Notes
 
 Same architecture as the web SDK: this package only reports metrics and handles the one-time card bind. All threshold evaluation and Stripe charges happen server-side.
+
+Each hook mount receives a fresh visit identifier. Use the exported `getAccessStatus(config, metric)` before opening protected content, and use `config.onAccessDecision` to show the returned cap message and lock the screen when status is `cap_reached`.

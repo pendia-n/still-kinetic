@@ -9,13 +9,13 @@ export type Metric = (typeof ALL_METRICS)[number];
 
 export const CUMULATIVE_METRICS: Metric[] = [
   'press_count', 'scroll_length', 'stay_duration', 'swipe_count',
-  'long_press_count', 'form_submit_count', 'tab_switch_count',
+  'pinch_zoom_count', 'long_press_count', 'form_submit_count', 'tab_switch_count',
   'search_count', 'video_play_count', 'video_watch_duration',
   'file_download_count', 'share_count', 'mouse_distance',
 ];
 
 export const INSTANTANEOUS_METRICS: Metric[] = [
-  'scroll_speed', 'type_speed', 'pinch_zoom_count',
+  'scroll_speed', 'type_speed',
 ];
 
 export const INSTANTANEOUS_TRIGGER_COOLDOWN_MS = 60_000;

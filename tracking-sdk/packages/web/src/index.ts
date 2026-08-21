@@ -4,9 +4,9 @@ import { attachScrollTracker } from './trackers/scrollTracker';
 import { attachTypeTracker } from './trackers/typeTracker';
 import { attachStayTracker } from './trackers/stayTracker';
 import { CardBind } from './billing/CardBind';
-import type { StillKineticConfig, SpendingCapInput, CardBindResult, Metric } from './core/types';
+import type { StillKineticConfig, SpendingCapInput, CardBindResult, Metric, AccessDecision } from './core/types';
 
-export type { StillKineticConfig, SpendingCapInput, CardBindResult, Metric, TrackEvent } from './core/types';
+export type { StillKineticConfig, SpendingCapInput, CardBindResult, Metric, TrackEvent, AccessDecision, AccessStatus } from './core/types';
 export { ALL_METRICS } from './core/types';
 
 /** Server-enforced config fetched on init. */
@@ -37,13 +37,16 @@ export class StillKinetic {
   private started = false;
   private serverConfig: ServerConfig | null = null;
   private _subscriptionActive = false;
+  private visitId: string | null = null;
 
   constructor(private config: StillKineticConfig) {
     this.sender = new BatchSender(config);
   }
 
-  private getPageId = () =>
-    this.config.pageId ?? (typeof window !== 'undefined' ? window.location.pathname : 'unknown');
+  private getPageId = () => {
+    const page = this.config.pageId ?? (typeof window !== 'undefined' ? window.location.pathname : 'unknown');
+    return `${page}::visit:${this.visitId ?? this.config.visitId ?? 'default'}`;
+  };
 
   /**
    * Fetch server config (allowed metrics + subscription status).
@@ -82,6 +85,7 @@ export class StillKinetic {
   /** Begin tracking the subset of metrics that the server allows. */
   start(): void {
     if (this.started) return;
+    this.visitId = this.config.visitId ?? (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`);
 
     // If server config was fetched, intersect client config with server-allowed
     const allowed = new Set<string>(this.serverConfig?.allowedMetrics ?? this.config.trackedMetrics);
@@ -122,6 +126,17 @@ export class StillKinetic {
     this.detachFns = [];
     this.sender.stop();
     this.started = false;
+    this.visitId = null;
+  }
+
+  /** Check whether the developer should allow this end user to continue. */
+  async getAccessStatus(metric?: Metric): Promise<AccessDecision> {
+    const baseUrl = this.config.apiBaseUrl.replace(/\/$/, '');
+    const query = new URLSearchParams({ appId: this.config.appId, apiKey: this.config.apiKey, endUserId: this.config.endUserId });
+    if (metric) query.set('metric', metric);
+    const res = await fetch(`${baseUrl}/api/end-user/access?${query}`);
+    if (!res.ok) throw new Error(`Access status request failed (${res.status})`);
+    return await res.json() as AccessDecision;
   }
 
   /**

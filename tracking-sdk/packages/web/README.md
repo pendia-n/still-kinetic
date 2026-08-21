@@ -51,3 +51,4 @@ tp.stop();
 - All five metrics (`press_count`, `scroll_length`, `scroll_speed`, `type_speed`, `stay_duration`) are tracked passively; only the ones listed in `trackedMetrics` are enabled.
 - The backend re-validates `trackedMetrics` against the app's subscription tier and will ignore any metric the tier doesn't allow — the SDK does not enforce this client-side.
 - Charges never fire from this package directly. It only reports metrics and handles the one-time card bind; the threshold engine and all Stripe charge calls live server-side (see the `platform` app).
+- Each `start()` creates a fresh visit identifier. Cumulative usage resets between visits, so 2.5 minutes before leaving plus 2 minutes after returning does not reach a 3-minute threshold. Call `getAccessStatus(metric)` before rendering protected content, or handle `onAccessDecision`; when it reports `cap_reached`, hide/lock the content and show its message.

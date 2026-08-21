@@ -1,0 +1,1 @@
+ALTER TABLE event_aggregates ADD COLUMN charge_units INTEGER NOT NULL DEFAULT 0;

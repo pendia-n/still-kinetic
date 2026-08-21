@@ -1,4 +1,4 @@
-import type { TrackEvent, StillKineticConfig } from '../core/types';
+import type { TrackEvent, StillKineticConfig, AccessDecision } from '../core/types';
 
 /**
  * Buffers events in memory and flushes them to the platform ingestion API
@@ -64,6 +64,10 @@ export class BatchSender {
       },
       body: payload,
       keepalive: true,
+    }).then(async (response) => {
+      if (!response.ok) throw new Error(`usage submission failed: ${response.status}`);
+      const body = await response.json().catch(() => ({})) as { access?: AccessDecision[] };
+      for (const decision of body.access ?? []) this.config.onAccessDecision?.(decision);
     }).catch(() => {
       if (retriesLeft > 0) {
         // Exponential backoff: 1s, 2s, 4s

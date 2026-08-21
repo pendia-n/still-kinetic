@@ -52,6 +52,19 @@ export interface StillKineticConfig {
   endUserId: string;
   trackedMetrics: Metric[];
   batchIntervalMs?: number;
+  visitId?: string;
+  onAccessDecision?: (decision: AccessDecision) => void;
+}
+
+export type AccessStatus = 'allowed' | 'cap_reached' | 'payment_required' | 'subscription_inactive' | 'connect_required';
+export interface AccessDecision {
+  allowed: boolean;
+  status: AccessStatus;
+  message: string;
+  remainingCents: number | null;
+  capCents: number | null;
+  period: 'weekly' | 'monthly' | null;
+  spentCents: number;
 }
 
 export interface SpendingCapInput {

@@ -6,7 +6,7 @@ import { useTypeTracker } from './trackers/typeTracker';
 import { useStayTracker } from './trackers/stayTracker';
 import type { StillKineticConfig, Metric } from './core/types';
 
-export type { StillKineticConfig, SpendingCapInput, CardBindResult, Metric, TrackEvent } from './core/types';
+export type { StillKineticConfig, SpendingCapInput, CardBindResult, Metric, TrackEvent, AccessDecision, AccessStatus } from './core/types';
 export { ALL_METRICS } from './core/types';
 
 interface ServerConfig {
@@ -32,6 +32,8 @@ export function useStillKinetic(config: StillKineticConfig, pageId: string) {
   const senderRef = useRef<BatchSender | null>(null);
   const [serverConfig, setServerConfig] = useState<ServerConfig | null>(null);
   const [loading, setLoading] = useState(true);
+  const visitIdRef = useRef(config.visitId ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  const visitPageId = `${pageId}::visit:${visitIdRef.current}`;
 
   // Fetch server config on mount
   useEffect(() => {
@@ -74,10 +76,10 @@ export function useStillKinetic(config: StillKineticConfig, pageId: string) {
   const sender = senderRef.current;
 
   // Only wire up trackers if tracking is enabled
-  const { onPressIn } = usePressTracker(config, sender, pageId);
-  const { onScroll } = useScrollTracker(config, sender, pageId, effectiveMetrics);
-  const { onChangeText } = useTypeTracker(config, sender, pageId);
-  useStayTracker(config, sender, pageId);
+  const { onPressIn } = usePressTracker(config, sender, visitPageId);
+  const { onScroll } = useScrollTracker(config, sender, visitPageId, effectiveMetrics);
+  const { onChangeText } = useTypeTracker(config, sender, visitPageId);
+  useStayTracker(config, sender, visitPageId);
 
   // Return handlers only for allowed + enabled metrics
   return useMemo(
@@ -88,4 +90,13 @@ export function useStillKinetic(config: StillKineticConfig, pageId: string) {
     }),
     [effectiveMetrics, trackingEnabled, onPressIn, onScroll, onChangeText]
   );
+}
+
+export async function getAccessStatus(config: StillKineticConfig, metric?: Metric): Promise<import('./core/types').AccessDecision> {
+  const baseUrl = config.apiBaseUrl.replace(/\/$/, '');
+  const query = new URLSearchParams({ appId: config.appId, apiKey: config.apiKey, endUserId: config.endUserId });
+  if (metric) query.set('metric', metric);
+  const response = await fetch(`${baseUrl}/api/end-user/access?${query}`);
+  if (!response.ok) throw new Error(`Access status request failed (${response.status})`);
+  return await response.json();
 }

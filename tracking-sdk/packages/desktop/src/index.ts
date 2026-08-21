@@ -4,6 +4,8 @@ import StillKinetic, {
   type SpendingCapInput,
   type StillKineticConfig,
   type TrackEvent,
+  type AccessDecision,
+  type AccessStatus,
 } from '@stillkinetic/web-sdk';
 import {
   DesktopBillingPanel,
@@ -17,6 +19,8 @@ export type {
   SpendingCapInput,
   StillKineticConfig,
   TrackEvent,
+  AccessDecision,
+  AccessStatus,
 };
 export { ALL_METRICS } from '@stillkinetic/web-sdk';
 export { DesktopBillingPanel } from './billing/DesktopBillingPanel';
@@ -53,6 +57,7 @@ export class StillKineticDesktop {
   stop(): void { this.client.stop(); }
   get subscriptionActive(): boolean { return this.client.subscriptionActive; }
   get allowedMetrics(): string[] { return this.client.allowedMetrics; }
+  getAccessStatus(metric?: Metric): Promise<AccessDecision> { return this.client.getAccessStatus(metric); }
 
   async mountBillingPanel(
     target: string | HTMLElement,

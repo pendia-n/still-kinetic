@@ -1,5 +1,5 @@
 import { AppState, type AppStateStatus } from 'react-native';
-import type { TrackEvent, StillKineticConfig } from '../core/types';
+import type { TrackEvent, StillKineticConfig, AccessDecision } from '../core/types';
 
 export class BatchSender {
   private buffer: TrackEvent[] = [];
@@ -49,6 +49,10 @@ export class BatchSender {
         'X-Api-Key': this.config.apiKey,
       },
       body: JSON.stringify({ appId: this.config.appId, events }),
+    }).then(async (response) => {
+      if (!response.ok) throw new Error(`usage submission failed: ${response.status}`);
+      const body = await response.json().catch(() => ({})) as { access?: AccessDecision[] };
+      for (const decision of body.access ?? []) this.config.onAccessDecision?.(decision);
     }).catch(() => {
       if (retriesLeft > 0) {
         const delay = Math.pow(2, 3 - retriesLeft) * 1000;

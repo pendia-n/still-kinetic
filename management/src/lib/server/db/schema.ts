@@ -62,6 +62,7 @@ export const eventAggregates = sqliteTable('event_aggregates', {
   metric: text('metric').notNull(),
   value: real('value').notNull().default(0),
   baselineValue: real('baseline_value').notNull().default(0),
+  chargeUnits: integer('charge_units').notNull().default(0),
   lastTriggeredAt: integer('last_triggered_at', { mode: 'timestamp' }),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 });

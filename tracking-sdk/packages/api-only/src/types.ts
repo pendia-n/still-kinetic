@@ -45,6 +45,7 @@ export interface ApiOnlyConfig {
   pageId?: string;
   /** Optional fetch implementation for runtimes without global fetch. */
   fetch?: typeof globalThis.fetch;
+  onAccessDecision?: (decision: AccessDecision) => void;
 }
 
 export interface UsageEvent {
@@ -53,6 +54,7 @@ export interface UsageEvent {
   metric: Metric;
   value: number;
   timestamp?: number;
+  visitId?: string;
 }
 
 export interface SubmittedUsageEvent {
@@ -76,4 +78,16 @@ export interface TrackResult {
   submitted: number;
   /** Event ingestion is accepted asynchronously; this does not mean a Stripe charge succeeded. */
   chargeStatus: 'not_returned_by_ingestion_api';
+  access?: AccessDecision[];
+}
+
+export type AccessStatus = 'allowed' | 'cap_reached' | 'payment_required' | 'subscription_inactive' | 'connect_required';
+export interface AccessDecision {
+  allowed: boolean;
+  status: AccessStatus;
+  message: string;
+  remainingCents: number | null;
+  capCents: number | null;
+  period: 'weekly' | 'monthly' | null;
+  spentCents: number;
 }

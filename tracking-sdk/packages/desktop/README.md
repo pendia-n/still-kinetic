@@ -62,6 +62,8 @@ The panel performs this sequence only after the end user checks the consent box 
 
 Card numbers never pass through or persist in the desktop application or StillKinetic D1. Stripe stores the card. StillKinetic stores the Stripe customer/payment-method references and the user's cap.
 
+`StillKineticDesktop#getAccessStatus(metric)` returns the access decision used by the web facade. The desktop host must disable the relevant action/window and display the returned cap message when access is denied.
+
 ## Supported desktop runtimes
 
 - Electron renderer process
