@@ -1,6 +1,6 @@
 {
   "name": "@stillkinetic/api-only-sdk",
-  "version": "0.1.5",
+  "version": "0.1.55",
   "description": "Headless StillKinetic usage reporting for servers, APIs, CLI applications, and MCP agents.",
   "license": "MIT",
   "main": "dist/index.js",

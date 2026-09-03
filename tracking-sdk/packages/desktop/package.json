@@ -1,6 +1,6 @@
 {
   "name": "@stillkinetic/desktop-sdk",
-  "version": "0.1.5",
+  "version": "0.1.55",
   "description": "StillKinetic tracking and Stripe billing-consent UI for Electron, Tauri, and npm-compatible desktop WebViews.",
   "license": "MIT",
   "main": "dist/index.js",
