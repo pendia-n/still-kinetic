@@ -49,6 +49,8 @@ export interface ApiOnlyConfig {
 }
 
 export interface UsageEvent {
+  /** Optional stable identifier for server-side idempotency. */
+  eventId?: string;
   endUserId?: string;
   pageId?: string;
   metric: Metric;
@@ -58,6 +60,7 @@ export interface UsageEvent {
 }
 
 export interface SubmittedUsageEvent {
+  eventId: string;
   appId: string;
   endUserId: string;
   pageId: string;

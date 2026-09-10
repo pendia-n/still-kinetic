@@ -33,7 +33,10 @@ export class BatchSender {
   }
 
   enqueue(event: TrackEvent): void {
-    this.buffer.push(event);
+    this.buffer.push({
+      ...event,
+      eventId: event.eventId ?? (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`),
+    });
     if (this.buffer.length >= this.maxBufferSize) this.flush();
   }
 

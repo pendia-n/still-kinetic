@@ -36,6 +36,8 @@ export const ALL_METRICS: Metric[] = [
 ];
 
 export interface TrackEvent {
+  /** Stable client-generated identifier for server-side idempotency. */
+  eventId?: string;
   appId: string;
   endUserId: string;
   pageId: string;

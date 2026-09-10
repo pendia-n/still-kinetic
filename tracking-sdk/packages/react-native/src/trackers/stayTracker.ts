@@ -13,12 +13,13 @@ import type { StillKineticConfig } from '../core/types';
  * so the timer starts/stops with screen focus rather than mount/unmount —
  * see README for the pattern.
  */
-export function useStayTracker(config: StillKineticConfig, sender: BatchSender, pageId: string) {
+export function useStayTracker(config: StillKineticConfig, sender: BatchSender, pageId: string, enabled = true) {
   const activeMsRef = useRef(0);
-  const segmentStart = useRef<number | null>(Date.now());
+  const segmentStart = useRef<number | null>(AppState.currentState === 'active' ? Date.now() : null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
+    if (!enabled) return;
     const closeSegment = () => {
       if (segmentStart.current !== null) {
         activeMsRef.current += Date.now() - segmentStart.current;
@@ -26,7 +27,7 @@ export function useStayTracker(config: StillKineticConfig, sender: BatchSender, 
       }
     };
     const openSegment = () => {
-      if (segmentStart.current === null) segmentStart.current = Date.now();
+      if (segmentStart.current === null && AppState.currentState === 'active') segmentStart.current = Date.now();
     };
 
     const report = () => {
@@ -70,5 +71,5 @@ export function useStayTracker(config: StillKineticConfig, sender: BatchSender, 
       sub.remove();
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [config, sender, pageId]);
+  }, [config, sender, pageId, enabled]);
 }

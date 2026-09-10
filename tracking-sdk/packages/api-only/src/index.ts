@@ -134,6 +134,7 @@ export class StillKineticApi {
     }
 
     return {
+      eventId: event.eventId ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`,
       appId: this.config.appId,
       endUserId,
       pageId,

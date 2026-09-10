@@ -1,6 +1,6 @@
 {
   "name": "@stillkinetic/rn-sdk",
-  "version": "0.1.55",
+  "version": "1.25.0",
   "description": "Selectable-metric behavioral tracking with threshold-triggered Stripe billing, for React Native apps.",
   "license": "MIT",
   "main": "dist/index.js",

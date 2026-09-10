@@ -79,7 +79,7 @@ export function useStillKinetic(config: StillKineticConfig, pageId: string) {
   const { onPressIn } = usePressTracker(config, sender, visitPageId);
   const { onScroll } = useScrollTracker(config, sender, visitPageId, effectiveMetrics);
   const { onChangeText } = useTypeTracker(config, sender, visitPageId);
-  useStayTracker(config, sender, visitPageId);
+  useStayTracker(config, sender, visitPageId, effectiveMetrics.includes('stay_duration') && trackingEnabled);
 
   // Return handlers only for allowed + enabled metrics
   return useMemo(
