@@ -100,6 +100,21 @@ export const POST: RequestHandler = async ({ request, platform }) => {
       break;
     }
 
+    case 'refund.updated': {
+      const refund = event.data.object;
+      const paymentIntentId = typeof refund.payment_intent === 'string'
+        ? refund.payment_intent
+        : refund.payment_intent?.id;
+      if (paymentIntentId) {
+        const status = refund.status === 'succeeded' ? 'succeeded'
+          : refund.status === 'failed' || refund.status === 'canceled' ? refund.status : 'pending';
+        await d1.prepare(
+          `UPDATE subscription_refunds SET status = ?, updated_at = ? WHERE stripe_refund_id = ? OR stripe_payment_intent_id = ?`,
+        ).bind(status, Date.now(), refund.id, paymentIntentId).run();
+      }
+      break;
+    }
+
     case 'account.updated': {
       const account = event.data.object;
       if (account.charges_enabled) {

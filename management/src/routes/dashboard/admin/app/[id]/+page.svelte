@@ -28,6 +28,11 @@
   let subscription = $state<any>(null);
   let managingSubscription = $state(false);
   let subscriptionMessage = $state('');
+  let subscriptionInvoices = $state<any[]>([]);
+  let refundWindowHours = $state(72);
+  let refundPercent = $state(90);
+  let refundMessage = $state('');
+  let requestingRefund = $state<string | null>(null);
 
   // Existing SDK metrics grouped for configuration display. These are only
   // presentation groups; metric IDs remain unchanged across SDK and backend.
@@ -70,13 +75,18 @@
   function token() { return ''; }  // Cookie auth
 
   async function loadApp() {
-    const [appRes, subscriptionRes] = await Promise.all([
+    const [appRes, subscriptionRes, refundsRes] = await Promise.all([
       fetch(`/api/apps/${id()}`),
       fetch(`/api/stripe/subscription/manage?appId=${encodeURIComponent(id())}`),
+      fetch(`/api/stripe/subscription/refund?appId=${encodeURIComponent(id())}`),
     ]);
     appData = await appRes.json();
     const subscriptionData = await subscriptionRes.json();
     subscription = subscriptionRes.ok ? subscriptionData.subscription : null;
+    const refundsData = refundsRes.ok ? await refundsRes.json() : { invoices: [] };
+    subscriptionInvoices = refundsData.invoices ?? [];
+    refundWindowHours = refundsData.refundWindowHours ?? 72;
+    refundPercent = refundsData.refundPercent ?? 90;
     try {
       const parsed = JSON.parse(appData.allowed_metrics || '[]');
       selectedTypes = Array.isArray(parsed) ? parsed : [];
@@ -84,6 +94,29 @@
       selectedTypes = [];
     }
     loading = false;
+  }
+
+  function formatMoney(cents: number, currency = 'USD'): string {
+    return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(cents / 100);
+  }
+
+  async function requestRefund(invoiceId: string) {
+    if (!window.confirm(`Request a ${refundPercent}% refund for this payment? This also schedules cancellation of the weekly subscription. The refund does not end access immediately.`)) return;
+    requestingRefund = invoiceId;
+    refundMessage = '';
+    const res = await fetch('/api/stripe/subscription/refund', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ appId: id(), invoiceId }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      refundMessage = `Refund requested: ${formatMoney(data.refundAmountCents, data.currency)}. Stripe status: ${data.status}. Renewal cancellation is scheduled.`;
+      await loadApp();
+    } else {
+      refundMessage = data.error || 'Could not request refund.';
+    }
+    requestingRefund = null;
   }
 
   function toggleType(m: string) {
@@ -280,13 +313,38 @@
           {managingSubscription ? 'Updating...' : 'Keep Subscription'}
         </button>
       {:else}
-        <p style="margin-bottom:0.7rem">Cancel any time to stop the next renewal. Your app stays active through the current paid period, and cancellation does not refund that period. Refund requests must be made within 72 hours of the payment; this dashboard does not issue refunds automatically.</p>
+        <p style="margin-bottom:0.7rem">Cancel any time to stop the next renewal. Your app stays active through the current paid period. A separate request below refunds {refundPercent}% of an eligible payment made within {refundWindowHours} hours and also schedules cancellation; Stripe records the refund against that invoice.</p>
         <button class="btn-danger" onclick={() => setCancelAtPeriodEnd(true)} disabled={managingSubscription}>
           {managingSubscription ? 'Updating...' : 'Cancel at Period End'}
         </button>
       {/if}
       {#if subscriptionMessage}
         <p style="margin-top:0.7rem;font-size:0.85rem">{subscriptionMessage}</p>
+      {/if}
+      {#if subscriptionInvoices.some((invoice: any) => invoice.refundable || invoice.refundStatus)}
+        <div style="border-top:1px solid var(--border);margin-top:1rem;padding-top:0.8rem">
+          <strong>Recent subscription payments</strong>
+          <p style="color:var(--text-muted);font-size:0.82rem;margin:0.35rem 0 0.7rem">Eligible requests must be submitted within 72 hours of that payment. A refund returns 90% of the amount paid; access continues through the paid period.</p>
+          {#each subscriptionInvoices.filter((invoice: any) => invoice.refundable || invoice.refundStatus) as invoice}
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:0.75rem;padding:0.55rem 0;border-top:1px solid var(--border)">
+              <div>
+                <div>{formatMoney(invoice.amountPaidCents, invoice.currency)} paid</div>
+                <small style="color:var(--text-muted)">{invoice.paidAt ? new Date(invoice.paidAt).toLocaleString() : 'Payment date unavailable'} · refund {formatMoney(invoice.refundAmountCents ?? invoice.requestedRefundCents ?? 0, invoice.currency)}</small>
+                {#if invoice.refundStatus}
+                  <div><small>Refund status: {invoice.refundStatus}</small></div>
+                {/if}
+              </div>
+              {#if invoice.refundable}
+                <button class="btn-danger" onclick={() => requestRefund(invoice.invoiceId)} disabled={requestingRefund !== null}>
+                  {requestingRefund === invoice.invoiceId ? 'Requesting...' : 'Request 90% Refund'}
+                </button>
+              {/if}
+            </div>
+          {/each}
+        </div>
+      {/if}
+      {#if refundMessage}
+        <p role="status" style="margin-top:0.7rem;font-size:0.85rem">{refundMessage}</p>
       {/if}
     </div>
   {/if}

@@ -79,3 +79,23 @@ export const triggerLogs = sqliteTable('trigger_logs', {
   failureReason: text('failure_reason'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 });
+
+export const subscriptionRefunds = sqliteTable('subscription_refunds', {
+  id: text('id').primaryKey(),
+  appId: text('app_id').notNull().references(() => apps.id),
+  requestedByUserId: text('requested_by_user_id').notNull().references(() => users.id),
+  stripeSubscriptionId: text('stripe_subscription_id').notNull(),
+  stripeInvoiceId: text('stripe_invoice_id').notNull().unique(),
+  stripePaymentIntentId: text('stripe_payment_intent_id').notNull(),
+  stripeCreditNoteId: text('stripe_credit_note_id'),
+  stripeRefundId: text('stripe_refund_id').unique(),
+  stripeIdempotencyKey: text('stripe_idempotency_key').notNull().unique(),
+  amountPaidCents: integer('amount_paid_cents').notNull(),
+  refundAmountCents: integer('refund_amount_cents').notNull(),
+  currency: text('currency').notNull(),
+  paidAt: integer('paid_at').notNull(),
+  status: text('status').notNull(),
+  failureReason: text('failure_reason'),
+  requestedAt: integer('requested_at').notNull(),
+  updatedAt: integer('updated_at').notNull(),
+});

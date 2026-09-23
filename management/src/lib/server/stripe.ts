@@ -91,6 +91,44 @@ class StripeClient {
     },
   };
 
+  invoices: any = {
+    list: (params: { subscription: string; status?: string; limit?: number }) => {
+      const query = new URLSearchParams({ subscription: params.subscription });
+      if (params.status) query.set('status', params.status);
+      if (params.limit) query.set('limit', String(params.limit));
+      return this.request('GET', `/invoices?${query.toString()}`);
+    },
+    retrieve: (id: string) => this.request('GET', `/invoices/${id}`),
+  };
+
+  invoicePayments: any = {
+    list: (invoice: string) => {
+      const query = new URLSearchParams({ invoice, status: 'paid', limit: '100' });
+      return this.request('GET', `/invoice_payments?${query.toString()}`);
+    },
+  };
+
+  refunds: any = {
+    list: (paymentIntent: string) => {
+      const query = new URLSearchParams({ payment_intent: paymentIntent, limit: '100' });
+      return this.request('GET', `/refunds?${query.toString()}`);
+    },
+    retrieve: (id: string) => this.request('GET', `/refunds/${id}`),
+  };
+
+  creditNotes: any = {
+    create: (params: { invoice: string; amount: number; refund_amount: number; memo: string; metadata: Record<string, string>; idempotencyKey: string }) => {
+      const body = new URLSearchParams();
+      body.set('invoice', params.invoice);
+      body.set('amount', String(params.amount));
+      body.set('refund_amount', String(params.refund_amount));
+      body.set('memo', params.memo);
+      body.set('email_type', 'credit_note');
+      Object.entries(params.metadata).forEach(([key, value]) => body.set(`metadata[${key}]`, value));
+      return this.request('POST', '/credit_notes', body, { idempotencyKey: params.idempotencyKey });
+    },
+  };
+
   accounts: any = {
     create: (params: any) => {
       const body = new URLSearchParams();
