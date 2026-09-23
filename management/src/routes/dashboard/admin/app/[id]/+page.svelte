@@ -275,12 +275,12 @@
     <div class="card" style="margin-bottom:1rem;border-color:var(--brand);background:rgba(248,88,34,0.04)">
       <div class="section-title" style="color:var(--brand)">✅ Subscription Active</div>
       {#if subscription?.cancelAtPeriodEnd}
-        <p style="margin-bottom:0.7rem">Cancellation is scheduled for <strong>{periodEndLabel()}</strong>. No renewal charge will be made after that period.</p>
+        <p style="margin-bottom:0.7rem">Cancellation is scheduled for <strong>{periodEndLabel()}</strong>. Your app remains active through that date, and no renewal charge will be made after that period.</p>
         <button class="btn-brand" onclick={() => setCancelAtPeriodEnd(false)} disabled={managingSubscription}>
           {managingSubscription ? 'Updating...' : 'Keep Subscription'}
         </button>
       {:else}
-        <p style="margin-bottom:0.7rem">Your app remains active until you cancel. Cancellation takes effect at the end of the current paid period.</p>
+        <p style="margin-bottom:0.7rem">Cancel any time to stop the next renewal. Your app stays active through the current paid period, and cancellation does not refund that period. Refund requests must be made within 72 hours of the payment; this dashboard does not issue refunds automatically.</p>
         <button class="btn-danger" onclick={() => setCancelAtPeriodEnd(true)} disabled={managingSubscription}>
           {managingSubscription ? 'Updating...' : 'Cancel at Period End'}
         </button>
